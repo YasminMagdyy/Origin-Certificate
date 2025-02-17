@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تصفية</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-right">
+      <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
+      <label id="header">الغرفة التجارية</label>
+    </div>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  </nav>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
+    <a href="{% url 'index' %}">الصفحه الرئيسيه</a>
+    <a href="{% url 'filter' %}">تصفيه</a>
+    <a href="{% url 'cargo' %}">البضائع</a>
+    <a href="{% url 'country' %}">البلد</a>
+  </div>
+  
+  <!-- Page Content -->
+  <div class="container">
+    <!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeEditModal()">&times;</span>
+    <h2>تعديل الشهادة</h2>
+    <form id="editForm">
+      <input type="hidden" id="certificateId" name="certificateId">
+
+      <div class="form-row">
+        <div class="form-container">
+          <div class="form-group">
+            <label for="office">اسم المكتب:</label>
+            <select id="office">
+              <option value="">اسم المكتب</option>
+              <option value="عام">عام</option>
+              <option value="شرق">شرق</option>
+              <option value="برج العرب">برج العرب</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="registrationNumber">رقم السجل:</label>
+            <input type="text" id="registrationNumber">
+          </div>
+
+          <div class="form-group">
+            <label for="companyName">اسم الشركة:</label>
+            <input type="text" id="companyName">
+          </div>
+
+          <div class="form-group">
+            <label for="companyAddress">عنوان الشركة:</label>
+            <input type="text" id="companyAddress">
+          </div>
+
+          <div class="form-group">
+            <label for="companyStatus">حالة الشركة:</label>
+            <input type="text" id="companyStatus">
+          </div>
+
+          <div class="form-group">
+            <label for="companyType">نوع الشركة:</label>
+            <input type="text" id="companyType">
+          </div>
+
+          <div class="form-group">
+            <label for="certificateNumber">رقم الشهادة:</label>
+            <input type="text" id="certificateNumber">
+          </div>
+        </div>
+
+        <div class="form-container">
+          <div class="form-group">
+            <label for="cargo">البضاعه:</label>
+            <select id="cargo"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="exportCountry">بلد التصدير:</label>
+            <select id="exportCountry"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="originCountry">بلد المنشأ:</label>
+            <select id="originCountry">
+              <option value="مصر" selected>مصر</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="processDate">تاريخ العملية:</label>
+            <input type="date" id="processDate">
+          </div>
+
+          <div class="form-group">
+            <label for="receiptNumber">رقم الايصال:</label>
+            <input type="text" id="receiptNumber">
+          </div>
+
+          <div class="form-group">
+            <label for="receiptDate">تاريخ الايصال:</label>
+            <input type="date" id="receiptDate">
+          </div>
+
+          <div class="form-group">
+            <label for="paymentAmount">القيمة المدفوعة:</label>
+            <input type="number" id="paymentAmount">
+          </div>
+        </div>
+      </div>
+      <button id="modalEditButton"onclick="submitEditModal()"  >تعديل</button>
+    </form>
+  </div>
+</div>
+
+    <h1>تصفية</h1>
+    <div class="filter">
+      <div class="form-group">
+        <label for="filterOffice">اسم المكتب:</label>
+        <select id="filterOffice">
+          <option value="">اختر مكتب</option>
+          <option value="عام">عام</option>
+          <option value="شرق">شرق</option>
+          <option value="برج العرب">برج العرب</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="filterRegistrationNumber">رقم السجل:</label>
+        <input type="text" id="filterRegistrationNumber" placeholder="ادخل رقم السجل">
+      </div>
+      <!-- Search button triggers the JavaScript function -->
+      <button id="searchButton" onclick="searchCertificates()">بحث</button>
+    </div>
+    
+    <!-- Table Div (Below) -->
+    <div class="table-container">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>اسم المكتب</th>
+            <th>اسم الفرع</th>     
+            <th>رقم السجل</th>
+            <th>رقم الشهادة</th>
+            <th>اسم الشركة</th>
+            <th>عنوان الشركة</th>
+            <th>حالة الشركة</th>
+            <th>نوع الشركة</th>
+            <th>البضائع</th>
+            <th>بلد المنشأ</th>
+            <th>بلد التصدير</th>
+            <th>تاريخ العملية</th>
+            <th>رقم الايصال</th>
+            <th>تاريخ الايصال</th>
+            <th>القيمة المدفوعة</th>
+            <th>تعديل</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be added dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="{% static 'script.js' %}"></script>
+</body>
+</html>

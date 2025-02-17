@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام شهادة المصدر</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-right">
+        <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
+        <label id="header">الغرفة التجارية</label>
+    </div>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+</nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
+      <a href="{% url 'index' %}">الصفحة الرئيسية</a>
+      <a href="{% url 'filter' %}">تصفية</a>
+      <a href="{% url 'cargo' %}">البضائع</a>
+      <a href="{% url 'country' %}">البلد</a>    
+    </div>
+
+  <!-- Page Content -->
+  <div class="container">
+    <h1>شهادة المصدر و المنشأ</h1>
+    <div class="form-row">
+      <!-- Right Div -->
+      <div class="form-container right">
+        <form id="rightForm">
+          <div class="form-group">
+            <label for="office">اسم المكتب:</label>
+            <select id="office">
+              <option value="">اسم المكتب</option>
+              <option value="عام">عام</option>
+              <option value="شرق">شرق</option>
+              <option value="برج العرب">برج العرب</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="registrationNumber">رقم السجل:</label>
+            <input type="text" id="registrationNumber" placeholder="رقم السجل">
+          </div>
+
+          <div class="form-group">
+            <label for="companyName">اسم الشركة:</label>
+            <input type="text" id="companyName" placeholder="اسم الشركه">
+          </div>
+
+          <div class="form-group">
+            <label for="companyAddress">عنوان الشركة:</label>
+            <input type="text" id="companyAddress" placeholder="عنوان الشركه">
+          </div>
+
+          <div class="form-group">
+            <label for="companyStatus">حالة الشركة:</label>
+            <input type="text" id="companyStatus" placeholder="حالة الشركه">
+          </div>
+
+          <div class="form-group">
+            <label for="companyType">نوع الشركة:</label>
+            <input type="text" id="companyType" placeholder="نوع الشركه">
+          </div>
+
+          <div class="form-group">
+            <label for="certificateNumber">رقم الشهادة:</label>
+            <input type="text" id="certificateNumber" placeholder="رقم الشهاده">
+          </div>
+        </form>
+      </div>
+      
+      <!-- Left Div -->
+      <div class="form-container left">
+        <form id="leftForm">
+          <div class="form-group">
+            <label for="cargo">البضاعه:</label>
+            <select id="cargo">اختر البضاعه</select>
+            <button type="button" class="add-button" onclick="openModal('cargo')">+</button>
+          </div>
+            
+          <div class="form-group">
+            <label for="exportCountry">بلد التصدير:</label>
+            <select id="exportCountry">اختر بلد التصدير</select>
+            <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
+          </div>
+            
+          <div class="form-group">
+            <label for="originCountry">بلد المنشأ:</label>
+            <select id="originCountry">
+              <option value="مصر" selected>مصر</option>         
+            </select>
+            <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
+          </div>
+                  
+          <div class="form-group">
+            <label for="processDate">تاريخ العمليه:</label>
+            <input type="date" id="processDate" placeholder="تاريخ العمليه">
+          </div>
+
+          <div class="form-group">
+            <label for="receiptNumber">رقم الايصال:</label>
+            <input type="text" id="receiptNumber" placeholder="رقم الايصال">
+          </div>
+
+          <div class="form-group">
+            <label for="receiptDate">تاريخ الايصال:</label>
+            <input type="date" id="receiptDate" placeholder="تاريخ الايصال">
+          </div>
+
+          <div class="form-group">
+            <label for="paymentAmount">القيمه المدفوعه:</label>
+            <input type="number" id="paymentAmount" placeholder="القيمه المدفوعه">
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="save-button-container">
+      <button type="submit" id="saveButton">حفظ</button>
+    </div>
+
+    <!-- Modal for Adding New Items -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <label for="newItem">إضافه عنصر جديد:</label>
+        <input type="text" id="newItem" placeholder="ادخل العنصر الجديد">
+        <button type="button" onclick="addItem()">موافق</button>
+      </div>
+    </div>
+    <div id="newTableContainer">
+    </div>
+  </div>
+  <script src="{% static 'script.js' %}"></script>
+</body>
+</html>
