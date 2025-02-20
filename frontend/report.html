@@ -3,10 +3,14 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <style>
+      body {
+          font-family: 'Arial', sans-serif;
+      }
+  </style>
    <title>تقرير الشهادات</title>
    {% load static %}
    <link rel="stylesheet" href="{% static 'styles.css' %}">
-      <!-- إضافة رابط مكتبة Font Awesome for download icon -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -19,7 +23,7 @@
    </nav>
 
    <div class="sidebar" id="sidebar">
-      <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
+      <a href="javascript:void(0)" onclick="toggleSidebar()">✖️</a>
       <a href="{% url 'index' %}">الصفحة الرئيسية</a>
       <a href="{% url 'filter' %}">تصفية</a>
       <a href="{% url 'cargo' %}">البضائع</a>
@@ -65,11 +69,12 @@
 
       <hr>
       <h2>نتائج التقرير</h2>
-      <table>
+      <table id = 'certificatesTable'>
          <thead>
             <tr>
                <th>المعرف</th>
                <th>اسم المكتب</th>
+               <th>اسم الفرع</th>
                <th>رقم السجل</th>
                <th>رقم الشهادة</th>
                <th>اسم الشركة</th>
@@ -83,40 +88,49 @@
                <th>رقم الايصال</th>
                <th>تاريخ الايصال</th>
                <th>القيمة المدفوعة</th>
+               <th>القيمة (الكمية)</th>
+               <th>التكلفة</th>
             </tr>
          </thead>
          <tbody>
             {% for cert in certificates %}
             <tr>
                <td>{{ cert.id }}</td>
-               <td>{{ cert.Office }}</td>
+               <td>{{ cert.Office.OfficeName }}</td>
+               <td>{{ cert.Office.BranchName }}</td>
                <td>{{ cert.RegistrationNumber }}</td>
                <td>{{ cert.CertificateNumber }}</td>
                <td>{{ cert.Company.CompanyName }}</td>
                <td>{{ cert.Company.CompanyAddress }}</td>
                <td>{{ cert.Company.CompanyStatus }}</td>
                <td>{{ cert.Company.CompanyType }}</td>
-               <td>{{ cert.ExportedGoods }}</td>
-               <td>{{ cert.OriginCountry }}</td>
-               <td>{{ cert.ExportCountry }}</td>
+               <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
+               <td>{{ cert.OriginCountry.CountryName }}</td>
+               <td>{{ cert.ExportCountry.CountryName }}</td>
                <td>{{ cert.IssueDate }}</td>
                <td>{{ cert.ReceiptNumber }}</td>
                <td>{{ cert.ReceiptDate }}</td>
                <td>{{ cert.PaymentAmount }}</td>
+               <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
+               <td>{{ cert.cost }}</td>
             </tr>
             {% empty %}
             <tr>
-               <td colspan="12">لا توجد بيانات</td>
+               <td colspan="18">لا توجد بيانات</td>
             </tr>
             {% endfor %}
          </tbody>
       </table>
       <div class="download-buttons">
+         <button>
          <a href="{% url 'report_download' 'excel' %}?process_date_from={{ process_date_from }}&process_date_to={{ process_date_to }}&cargo={{ selected_cargo }}&export_country={{ selected_country }}" class="download-btn">
             تنزيل Excel
          </a>
+      </button>
+      <button onclick="printTableAsPDF()">طباعة الشهادات PDF</button>
+ 
      </div>
-     <script>
+   <script>
       window.onload = function() {
          if (window.location.search) {
             let params = new URLSearchParams(window.location.search);
@@ -149,6 +163,40 @@ document.addEventListener('click', function (e) {
     sidebar.classList.remove('active');
   }
 });
+function printTableAsPDF() {
+    let printWindow = window.open('', '_blank');
+    let table = document.getElementById('certificatesTable');
+    if (!table) {
+        alert('الجدول غير موجود!');
+        return;
+    }
+    
+    let htmlContent = `
+        <html>
+        <head>
+            <title>طباعة الشهادات</title>
+            <style>
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid black; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            ${table.outerHTML}
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.close();
+                }
+            <\/script>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+}
     </script>    
 </body>
 </html>

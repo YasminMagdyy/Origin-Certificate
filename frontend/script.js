@@ -455,11 +455,12 @@ function createCertificateTable(formData) {
 // -------------------------
 // Search Function (Example)
 // -------------------------
+// Search Certificates
 function searchCertificates() {
   // Use unique IDs for the filter form fields
   const office = document.getElementById('filterOffice').value;
   const registrationNumber = document.getElementById('filterRegistrationNumber').value;
-  
+
   // Construct the URL with encoded query parameters
   const url = `/filter_certificates/?office=${encodeURIComponent(office)}&registrationNumber=${encodeURIComponent(registrationNumber)}`;
   console.log("Fetching URL:", url); // Debug: check the URL in console
@@ -474,8 +475,8 @@ function searchCertificates() {
         data.certificates.forEach(cert => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${cert.office_name}</td>
-            <td>${cert.registration_number}</td>
+            <td>${cert.office_name || 'N/A'}</td>
+            <td>${cert.registration_number || 'N/A'}</td>
             <td>${cert.certificate_number}</td>
             <td>${cert.company_name}</td>
             <td>${cert.company_address}</td>
@@ -485,8 +486,8 @@ function searchCertificates() {
             <td>${cert.origin_country}</td>
             <td>${cert.exported_goods}</td>
             <td>${cert.issue_date}</td>
-            <td>${cert.quantity_display}</td>
-            <td>${cert.cost_display}</td>
+            <td>${cert.quantity_display || 'N/A'}</td>
+            <td>${cert.cost_display || 'N/A'}</td>
             <td>${cert.receipt_number}</td>
             <td>${cert.receipt_date || ''}</td>
             <td>${cert.payment_amount || ''}</td>
@@ -523,27 +524,27 @@ function editCertificate(cert) {
   openEditModal(cert);
 }
 
+// Delete Certificate
 function deleteCertificate(certId) {
   if (confirm("هل أنت متأكد من حذف الشهادة؟")) {
     fetch(`/delete-certificate/${certId}/`, {
       method: 'DELETE',
       headers: {
-        'X-CSRFToken': getCookie('csrftoken')
-      }
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success') {
-        alert('تم الحذف بنجاح');
-        searchCertificates(); // Refresh table
-      } else {
-        alert('خطأ في الحذف: ' + data.message);
-      }
-    })
-    .catch(error => console.error('Error:', error));
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert('تم الحذف بنجاح');
+          searchCertificates(); // Refresh table
+        } else {
+          alert('خطأ في الحذف: ' + data.message);
+        }
+      })
+      .catch(error => console.error('Error:', error));
   }
 }
-
 // EDIT and DELETE functions for Cargo
 function editCargo(cargoId, currentGoods) {
   const newGoods = prompt("أدخل البضاعة الجديدة:", currentGoods);
@@ -597,26 +598,26 @@ function editCountry(countryId, currentCountryName) {
   }
 }
 
+// Open Edit Modal
 function openEditModal(rowData) {
   // Populate the hidden certificate ID field
   document.getElementById('certificateId').value = rowData.id;
 
   // Populate the basic form fields
-  document.querySelector('#editForm #office').value = rowData.office_name;
+  document.querySelector('#editForm #office').value = rowData.office_name || '';
   document.querySelector('#editForm #companyName').value = rowData.company_name;
   document.querySelector('#editForm #companyAddress').value = rowData.company_address;
-  // Set dropdowns for companyStatus and companyType:
   document.querySelector('#editForm #companyStatus').value = rowData.company_status;
   document.querySelector('#editForm #companyType').value = rowData.company_type;
-  document.querySelector('#editForm #registrationNumber').value = rowData.registration_number;
+  document.querySelector('#editForm #registrationNumber').value = rowData.registration_number || '';
   document.querySelector('#editForm #certificateNumber').value = rowData.certificate_number;
   document.querySelector('#editForm #cargo').value = rowData.exported_goods;
   document.querySelector('#editForm #exportCountry').value = rowData.export_country;
   document.querySelector('#editForm #originCountry').value = rowData.origin_country;
   document.querySelector('#editForm #processDate').value = rowData.issue_date;
   document.querySelector('#editForm #receiptNumber').value = rowData.receipt_number;
-  document.querySelector('#editForm #receiptDate').value = rowData.receipt_date;
-  document.querySelector('#editForm #paymentAmount').value = rowData.payment_amount;
+  document.querySelector('#editForm #receiptDate').value = rowData.receipt_date || '';
+  document.querySelector('#editForm #paymentAmount').value = rowData.payment_amount || '';
 
   // Populate the new fields using raw values from the JSON response
   document.querySelector('#editForm #quantity').value = rowData.quantity || '';
@@ -624,14 +625,25 @@ function openEditModal(rowData) {
   document.querySelector('#editForm #cost_amount').value = rowData.cost_amount || '';
   document.querySelector('#editForm #cost_currency').value = rowData.cost_currency || 'USD';
 
+  // Disable office and registrationNumber fields if company status is "غير مقيد"
+  if (rowData.company_status === 'غير مقيد') {
+    document.querySelector('#editForm #office').disabled = true;
+    document.querySelector('#editForm #registrationNumber').disabled = true;
+  } else {
+    document.querySelector('#editForm #office').disabled = false;
+    document.querySelector('#editForm #registrationNumber').disabled = false;
+  }
+
   // Display the edit modal
   document.getElementById('editModal').style.display = "block";
 }
 
+// Close Edit Modal
 function closeEditModal() {
   document.getElementById('editModal').style.display = "none";
 }
 
+// Submit Edit Modal
 function submitEditModal() {
   const certificateId = document.getElementById('certificateId').value;
   const office = document.querySelector('#editForm #office').value;
@@ -657,52 +669,51 @@ function submitEditModal() {
 
   // Prepare the data to be sent to the backend
   const data = {
-      office: office,
-      registrationNumber: registrationNumber,
-      certificateNumber: certificateNumber,
-      companyName: companyName,
-      companyAddress: companyAddress,
-      companyStatus: companyStatus,
-      companyType: companyType,
-      cargo: cargo,
-      exportCountry: exportCountry,
-      originCountry: originCountry,
-      processDate: processDate,
-      receiptNumber: receiptNumber,
-      receiptDate: receiptDate,
-      paymentAmount: paymentAmount,
-      // Include the new fields
-      quantity: quantity,
-      quantity_unit: quantityUnit,
-      cost: costAmount,
-      cost_currency: costCurrency
+    office: companyStatus === 'غير مقيد' ? null : office,
+    registrationNumber: companyStatus === 'غير مقيد' ? null : registrationNumber,
+    certificateNumber: certificateNumber,
+    companyName: companyName,
+    companyAddress: companyAddress,
+    companyStatus: companyStatus,
+    companyType: companyType,
+    cargo: cargo,
+    exportCountry: exportCountry,
+    originCountry: originCountry,
+    processDate: processDate,
+    receiptNumber: receiptNumber,
+    receiptDate: receiptDate,
+    paymentAmount: paymentAmount,
+    quantity: quantity,
+    quantity_unit: quantityUnit,
+    cost: costAmount,
+    cost_currency: costCurrency,
   };
 
   if (!certificateId) {
-      alert("لا يوجد شهادة محددة للتعديل!");
-      return;
+    alert("لا يوجد شهادة محددة للتعديل!");
+    return;
   }
 
   const url = `/update-certificate/${certificateId}/`;
   const method = 'PUT';
 
   fetch(url, {
-      method: method,
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify(data)
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify(data),
   })
-  .then(response => response.json())
-  .then(respData => {
+    .then(response => response.json())
+    .then(respData => {
       if (respData.status === 'success') {
-          alert('تم تعديل البيانات بنجاح!');
-          closeEditModal();
-          // Optionally, refresh the table here
+        alert('تم تعديل البيانات بنجاح!');
+        closeEditModal();
+        searchCertificates(); // Refresh the table
       } else {
-          alert('خطأ: ' + respData.message);
+        alert('خطأ: ' + respData.message);
       }
-  })
-  .catch(error => console.error('Error:', error));
+    })
+    .catch(error => console.error('Error:', error));
 }
