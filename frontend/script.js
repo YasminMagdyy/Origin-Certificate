@@ -103,9 +103,7 @@ function loadItems(item_type) {
             const defaultOption = document.createElement('option');
             defaultOption.value = "مصر";
             defaultOption.text = "مصر";
-            defaultOption.disabled = true;
             defaultOption.selected = true;
-            defaultOption.hidden = true;
             selectElement.appendChild(defaultOption);
           }
 

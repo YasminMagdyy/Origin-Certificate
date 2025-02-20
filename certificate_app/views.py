@@ -54,46 +54,31 @@ def remove_all_diacritics(text):
     normalized = unicodedata.normalize('NFD', text)
     return ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
 
+import unicodedata
+import re
+import string
+
 def normalize_text(text):
     """
     Normalize the input text by:
+    - Handling None values gracefully.
     - Trimming extra spaces.
     - Converting to a standard Unicode form (NFKC).
-    - Standardizing Arabic letters (e.g. converting variants of Alef to 'ا',
-      la forms to 'لا'and replacing 'ة' with 'ه').
+    - Standardizing Arabic letters (e.g., converting variants of Alef to 'ا',
+      la forms to 'لا', and replacing 'ة' with 'ه').
     - Converting to lowercase.
     - Removing punctuation.
     - Removing all diacritical marks (accents and Arabic diacritics).
     """
     if text is None:
         return None
-    return text.strip()
+
     # Trim extra spaces
     text = ' '.join(text.strip().split())
+
     # Normalize Unicode to NFKC
     text = unicodedata.normalize('NFKC', text)
-    # Arabic letter standardization
-    for ch in ['أ', 'إ', 'آ']:
-        text = text.replace(ch, 'ا')
-    # Standardize la forms to 'لا'
-    for ch in ['لأ', 'لإ', 'لآ']:
-        text = text.replace(ch, 'لا')
-    # Replace ة with ه
-    text = text.replace('ة', 'ه')
-    # Convert to lowercase (for English text)
-    text = text.lower()
-    # Remove punctuation
-    text = re.sub(r'[{}]'.format(re.escape(string.punctuation)), '', text)
-    # Remove all diacritics (accents for English and Arabic diacritics)
-    text = remove_all_diacritics(text)
-    return text
 
-def normalize_text(text):
-    # Remove extra spaces
-    text = ' '.join(text.strip().split())
-    # Unicode normalization (this helps make similar characters equivalent)
-    text = unicodedata.normalize('NFKC', text)
-    
     # ----- Arabic normalization -----
     # Standardize Alef forms to 'ا'
     for ch in ['أ', 'إ', 'آ']:
@@ -107,14 +92,18 @@ def normalize_text(text):
     # ----- English normalization -----
     # Convert text to lowercase
     text = text.lower()
-    
-    # Normalize punctuation:
-    # For example, remove all punctuation characters:
-    # You can also replace them with a standard character if needed
-    text = re.sub(r'[{}]'.format(re.escape(string.punctuation)), '', text)
-    
-    return text
 
+    # Remove punctuation
+    text = re.sub(r'[{}]'.format(re.escape(string.punctuation)), '', text)
+
+    # Remove all diacritics (accents for English and Arabic diacritics)
+    text = ''.join(
+        char for char in unicodedata.normalize('NFD', text)
+        if unicodedata.category(char) != 'Mn'
+    )
+
+    return text
+    
 @csrf_exempt
 @require_POST
 def add_item(request):
