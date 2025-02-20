@@ -25,5 +25,4 @@ urlpatterns = [
     path('get-cargo-options/', views.get_cargo_options, name='get_cargo_options'),
     path('get-country-options/', views.get_country_options, name='get_country_options'),
     path('report_download/<str:file_format>/', views.download_report, name='report_download'), 
-
 ]
