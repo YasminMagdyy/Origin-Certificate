@@ -81,23 +81,31 @@ function loadItems(item_type) {
           selectElement.innerHTML = '';
 
           if (item_type === 'cargo') {
-            // Set default option for cargo
+            // Set default option for cargo with hidden attribute
             const defaultOption = document.createElement('option');
             defaultOption.value = "";
             defaultOption.text = "اختر البضاعه";
+            defaultOption.disabled = true;
             defaultOption.selected = true;
+            defaultOption.hidden = true;
             selectElement.appendChild(defaultOption);
           } else if (item_type === 'exportCountry') {
+            // Set default option for exportCountry with hidden attribute
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
-            defaultOption.text = 'اختر دوله التصدير';
+            defaultOption.text = 'اختر بلد التصدير';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            defaultOption.hidden = true;
             selectElement.appendChild(defaultOption);
           } else if (item_type === 'originCountry') {
-            // For originCountry, add default "مصر"
+            // For originCountry, add default "مصر" as a placeholder
             const defaultOption = document.createElement('option');
             defaultOption.value = "مصر";
             defaultOption.text = "مصر";
+            defaultOption.disabled = true;
             defaultOption.selected = true;
+            defaultOption.hidden = true;
             selectElement.appendChild(defaultOption);
           }
 
@@ -123,6 +131,22 @@ document.addEventListener('DOMContentLoaded', function() {
   loadItems('cargo');
   loadItems('exportCountry');
   loadItems('originCountry');
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const companyStatus = document.getElementById('companyStatus');
+  const officeField = document.getElementById('office');
+  const registrationNumberField = document.getElementById('registrationNumber');
+
+  companyStatus.addEventListener('change', function () {
+    if (this.value === 'غير مقيد') {
+      officeField.disabled = true;
+      registrationNumberField.disabled = true;
+    } else {
+      officeField.disabled = false;
+      registrationNumberField.disabled = false;
+    }
+  });
 });
 
 document.getElementById('registrationNumber').addEventListener('keypress', function (e) {
@@ -158,12 +182,34 @@ document.getElementById('registrationNumber').addEventListener('keypress', funct
           });
   }
 });
-// Save or update certificate when the saveButton is clicked
-document.getElementById('saveButton').addEventListener('click', function() {
+
+// Function to disable OfficeName and RegistrationNumber based on companyStatus
+document.getElementById('companyStatus').addEventListener('change', function() {
+  const companyStatus = this.value;
+  
+  const officeField = document.getElementById('office');
+  const registrationNumberField = document.getElementById('registrationNumber');
+  
+  if (companyStatus === "غير مقيد") {
+    officeField.disabled = true;
+    registrationNumberField.disabled = true;
+  } else {
+    officeField.disabled = false;
+    registrationNumberField.disabled = false;
+  }
+});
+
+// Save/Update Certificate
+document.getElementById('saveButton').addEventListener('click', function () {
   // Determine mode; default is "save"
   mode = mode || "save";
-  const office = document.getElementById('office').value;
-  const registrationNumber = document.getElementById('registrationNumber').value;
+
+  // Check if office and registrationNumber fields are disabled
+  const isUnregistered = document.getElementById('companyStatus').value === 'غير مقيد';
+  const office = isUnregistered ? null : document.getElementById('office').value;
+  const registrationNumber = isUnregistered ? null : document.getElementById('registrationNumber').value;
+
+  // Existing fields
   const certificateNumber = document.getElementById('certificateNumber').value;
   const companyName = document.getElementById('companyName').value;
   const companyAddress = document.getElementById('companyAddress').value;
@@ -177,22 +223,32 @@ document.getElementById('saveButton').addEventListener('click', function() {
   const receiptDate = document.getElementById('receiptDate').value;
   const paymentAmount = document.getElementById('paymentAmount').value;
 
+  // New fields for Quantity and Cost
+  const quantity = document.getElementById('quantity').value;
+  const quantityUnit = document.getElementById('quantity_unit').value;
+  const costAmount = document.getElementById('cost_amount').value;
+  const costCurrency = document.getElementById('cost_currency').value;
+
   // Prepare the data to be sent to the backend
   const data = {
-      office: office,
-      registrationNumber: registrationNumber,
-      certificateNumber: certificateNumber,
-      companyName: companyName,
-      companyAddress: companyAddress,
-      companyStatus: companyStatus,
-      companyType: companyType,
-      cargo: cargo,           // Expected to be the cargo id or value
-      exportCountry: exportCountry, // Expected to be the country id or value
-      originCountry: originCountry, // Expected to be the country id or value
-      processDate: processDate,
-      receiptNumber: receiptNumber,
-      receiptDate: receiptDate,
-      paymentAmount: paymentAmount
+    office: office,
+    registrationNumber: registrationNumber,
+    certificateNumber: certificateNumber,
+    companyName: companyName,
+    companyAddress: companyAddress,
+    companyStatus: companyStatus,
+    companyType: companyType,
+    cargo: cargo,
+    exportCountry: exportCountry,
+    originCountry: originCountry,
+    processDate: processDate,
+    receiptNumber: receiptNumber,
+    receiptDate: receiptDate,
+    paymentAmount: paymentAmount,
+    quantity: quantity,
+    quantity_unit: quantityUnit,
+    cost: costAmount,
+    cost_currency: costCurrency,
   };
 
   let url, method;
@@ -206,46 +262,66 @@ document.getElementById('saveButton').addEventListener('click', function() {
 
   // Send the data to the backend
   fetch(url, {
-      method: method,
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')  // Not needed if CSRF is exempt
-      },
-      body: JSON.stringify(data)
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify(data),
   })
-  .then(response => response.json())
-  .then(respData => {
+    .then((response) => response.json())
+    .then((respData) => {
       if (respData.status === 'success') {
         certificateId = respData.certificateId;
-        alert('Data saved successfully!');
-        document.getElementById('saveButton').innerHTML = "حفظ";
-        
+        alert('تم الحفظ بنجاح!');
+        document.getElementById('saveButton').innerHTML = 'حفظ';
+
         // Create/update the certificate table with form data
         createCertificateTable({
+          id: certificateId,
           office: office,
-          branch: 'فرع افتراضي', // Adjust if you have branch data
+          branch: 'فرع افتراضي', // Adjust if branch data is available
           companyName: companyName,
           companyAddress: companyAddress,
-          companyType: companyType,
           companyStatus: companyStatus,
+          companyType: companyType,
           registrationNumber: registrationNumber,
           certificateNumber: certificateNumber,
           exportCountry: exportCountry,
           originCountry: originCountry,
           cargo: cargo,
           issueDate: processDate,
+          quantity: quantity + ' ' + quantityUnit,
+          cost: costAmount + ' ' + costCurrency,
           receiptNumber: receiptNumber,
           receiptDate: receiptDate,
-          paymentAmount: paymentAmount
+          paymentAmount: paymentAmount,
         });
-        
+
         // Reset mode to "save" after updating
-        mode = "save";
+        mode = 'save';
       } else {
-          alert('Error saving data: ' + respData.message);
+        alert('حدث خطأ أثناء الحفظ: ' + respData.message);
       }
-  })
-  .catch(error => console.error('Error:', error));
+    })
+    .catch((error) => console.error('Error:', error));
+});
+
+// Function to disable/enable office and registrationNumber fields
+document.addEventListener('DOMContentLoaded', function () {
+  const companyStatus = document.getElementById('companyStatus');
+  const officeField = document.getElementById('office');
+  const registrationNumberField = document.getElementById('registrationNumber');
+
+  companyStatus.addEventListener('change', function () {
+    if (this.value === 'غير مقيد') {
+      officeField.disabled = true;
+      registrationNumberField.disabled = true;
+    } else {
+      officeField.disabled = false;
+      registrationNumberField.disabled = false;
+    }
+  });
 });
 
 // Create and display the certificate table
@@ -254,17 +330,33 @@ function createCertificateTable(formData) {
   const table = document.createElement('table');
   table.setAttribute('border', '1');
 
-  // Create the table header
+  // Create the table header with additional columns for Quantity and Cost
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
 
   const headers = [
-      'اسم المكتب', 'اسم الفرع', 'اسم الشركة', 'عنوان الشركة', 'نوع الشركة', 'حالة الشركة',
-      'رقم السجل', 'رقم الشهادة', 'بلد التصدير', 'بلد المنشأ', 'البضاعة', 'تاريخ العملية',
-      'رقم الايصال', 'تاريخ الايصال', 'القيمة المدفوعة', 'التعديل', 'الحذف'
+    'اسم المكتب',
+    'اسم الفرع',
+    'اسم الشركة',
+    'عنوان الشركة',
+    'حالة الشركة',
+    'نوع الشركة',
+    'رقم السجل',
+    'رقم الشهادة',
+    'بلد التصدير',
+    'بلد المنشأ',
+    'البضاعة',
+    'تاريخ العملية',
+    'القيمة',
+    'التكلفة',
+    'رقم الايصال',
+    'تاريخ الايصال',
+    'القيمة المدفوعة',
+    'التعديل',
+    'الحذف',
   ];
 
-  headers.forEach(text => {
+  headers.forEach((text) => {
     const th = document.createElement('th');
     th.textContent = text;
     headerRow.appendChild(th);
@@ -276,46 +368,77 @@ function createCertificateTable(formData) {
   const tbody = document.createElement('tbody');
   const dataRow = document.createElement('tr');
 
-  Object.values(formData).forEach(value => {
-      const td = document.createElement('td');
-      td.textContent = value;
-      dataRow.appendChild(td);
+  // Prepare the data array in the same order as headers
+  const rowData = [
+    formData.office,
+    formData.branch,
+    formData.companyName,
+    formData.companyAddress,
+    formData.companyStatus,
+    formData.companyType,
+    formData.registrationNumber,
+    formData.certificateNumber,
+    formData.exportCountry,
+    formData.originCountry,
+    formData.cargo,
+    formData.issueDate,
+    formData.quantity,
+    formData.cost,
+    formData.receiptNumber,
+    formData.receiptDate,
+    formData.paymentAmount,
+  ];
+
+  rowData.forEach((value) => {
+    const td = document.createElement('td');
+    td.textContent = value;
+    dataRow.appendChild(td);
   });
 
   // Create Edit button
   const editCell = document.createElement('td');
   const editButton = document.createElement('button');
   editButton.textContent = 'تعديل';
-  editButton.addEventListener('click', function() {
-      // Populate form fields with current data
-      document.getElementById('office').value = formData.office;
-      document.getElementById('companyName').value = formData.companyName;
-      document.getElementById('companyAddress').value = formData.companyAddress;
-      document.getElementById('companyType').value = formData.companyType;
-      document.getElementById('companyStatus').value = formData.companyStatus;
-      document.getElementById('registrationNumber').value = formData.registrationNumber;
-      document.getElementById('certificateNumber').value = formData.certificateNumber;
-      document.getElementById('cargo').value = formData.cargo;
-      document.getElementById('exportCountry').value = formData.exportCountry;
-      document.getElementById('originCountry').value = formData.originCountry;
-      document.getElementById('processDate').value = formData.issueDate;
-      document.getElementById('receiptNumber').value = formData.receiptNumber;
-      document.getElementById('receiptDate').value = formData.receiptDate;
-      document.getElementById('paymentAmount').value = formData.paymentAmount;
-      mode = "update";
-      document.getElementById('saveButton').innerHTML = "تعديل";
+  editButton.addEventListener('click', function () {
+    // Populate form fields with current data
+    document.getElementById('office').value = formData.office;
+    document.getElementById('companyName').value = formData.companyName;
+    document.getElementById('companyAddress').value = formData.companyAddress;
+    document.getElementById('companyStatus').value = formData.companyStatus;
+    document.getElementById('companyType').value = formData.companyType;
+    document.getElementById('registrationNumber').value = formData.registrationNumber;
+    document.getElementById('certificateNumber').value = formData.certificateNumber;
+    document.getElementById('cargo').value = formData.cargo;
+    document.getElementById('exportCountry').value = formData.exportCountry;
+    document.getElementById('originCountry').value = formData.originCountry;
+    document.getElementById('processDate').value = formData.issueDate;
+    document.getElementById('receiptNumber').value = formData.receiptNumber;
+    document.getElementById('receiptDate').value = formData.receiptDate;
+    document.getElementById('paymentAmount').value = formData.paymentAmount;
+
+    // Populate new fields for Quantity and Cost
+    const [quantityValue, quantityUnit] = formData.quantity.split(' ');
+    document.getElementById('quantity').value = quantityValue;
+    document.getElementById('quantity_unit').value = quantityUnit;
+
+    const [costAmt, costCurr] = formData.cost.split(' ');
+    document.getElementById('cost_amount').value = costAmt;
+    document.getElementById('cost_currency').value = costCurr;
+
+    mode = 'update';
+    document.getElementById('saveButton').innerHTML = 'تعديل';
   });
   editCell.appendChild(editButton);
   dataRow.appendChild(editCell);
 
-  // Create Delete button (function deleteCertificate must be implemented)
+  // Create Delete button (assumes deleteCertificate is implemented)
   const deleteCell = document.createElement('td');
   const deleteButton = document.createElement('button');
   deleteButton.textContent = 'حذف';
-  deleteButton.addEventListener('click', function() {
-      deleteCertificate(certificateId);
-      // Remove the row from the table
-      dataRow.remove();
+  deleteButton.addEventListener('click', function () {
+    deleteCertificate(certificateId);
+    // Remove the row from the table
+    dataRow.remove();
   });
   deleteCell.appendChild(deleteButton);
   dataRow.appendChild(deleteCell);
@@ -352,17 +475,18 @@ function searchCertificates() {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${cert.office_name}</td>
-            <td>${cert.branch_name}</td>
             <td>${cert.registration_number}</td>
             <td>${cert.certificate_number}</td>
             <td>${cert.company_name}</td>
             <td>${cert.company_address}</td>
             <td>${cert.company_status}</td>
             <td>${cert.company_type}</td>
-            <td>${cert.exported_goods}</td>
-            <td>${cert.origin_country}</td>
             <td>${cert.export_country}</td>
+            <td>${cert.origin_country}</td>
+            <td>${cert.exported_goods}</td>
             <td>${cert.issue_date}</td>
+            <td>${cert.quantity_display}</td>
+            <td>${cert.cost_display}</td>
             <td>${cert.receipt_number}</td>
             <td>${cert.receipt_date || ''}</td>
             <td>${cert.payment_amount || ''}</td>
@@ -377,7 +501,6 @@ function searchCertificates() {
     })
     .catch(error => console.error('Error fetching data:', error));
 }
-
 
 // Function to get CSRF token from cookies
 function getCookie(name) {
@@ -473,14 +596,18 @@ function editCountry(countryId, currentCountryName) {
     .catch(error => console.error('Error:', error));
   }
 }
+
 function openEditModal(rowData) {
+  // Populate the hidden certificate ID field
   document.getElementById('certificateId').value = rowData.id;
+
+  // Populate the basic form fields
   document.querySelector('#editForm #office').value = rowData.office_name;
   document.querySelector('#editForm #companyName').value = rowData.company_name;
-  document.querySelector('#editForm #companyAddress').value = rowData.
-  company_address;
-  document.querySelector('#editForm #companyType').value = rowData.company_type;
+  document.querySelector('#editForm #companyAddress').value = rowData.company_address;
+  // Set dropdowns for companyStatus and companyType:
   document.querySelector('#editForm #companyStatus').value = rowData.company_status;
+  document.querySelector('#editForm #companyType').value = rowData.company_type;
   document.querySelector('#editForm #registrationNumber').value = rowData.registration_number;
   document.querySelector('#editForm #certificateNumber').value = rowData.certificate_number;
   document.querySelector('#editForm #cargo').value = rowData.exported_goods;
@@ -490,8 +617,15 @@ function openEditModal(rowData) {
   document.querySelector('#editForm #receiptNumber').value = rowData.receipt_number;
   document.querySelector('#editForm #receiptDate').value = rowData.receipt_date;
   document.querySelector('#editForm #paymentAmount').value = rowData.payment_amount;
+
+  // Populate the new fields using raw values from the JSON response
+  document.querySelector('#editForm #quantity').value = rowData.quantity || '';
+  document.querySelector('#editForm #quantity_unit').value = rowData.quantity_unit || 'kg';
+  document.querySelector('#editForm #cost_amount').value = rowData.cost_amount || '';
+  document.querySelector('#editForm #cost_currency').value = rowData.cost_currency || 'USD';
+
+  // Display the edit modal
   document.getElementById('editModal').style.display = "block";
- 
 }
 
 function closeEditModal() {
@@ -499,13 +633,12 @@ function closeEditModal() {
 }
 
 function submitEditModal() {
- 
   const certificateId = document.getElementById('certificateId').value;
   const office = document.querySelector('#editForm #office').value;
-  const  companyName = document.querySelector('#editForm #companyName').value;
+  const companyName = document.querySelector('#editForm #companyName').value;
   const companyAddress = document.querySelector('#editForm #companyAddress').value;
-  const companyType = document.querySelector('#editForm #companyType').value;
   const companyStatus = document.querySelector('#editForm #companyStatus').value;
+  const companyType = document.querySelector('#editForm #companyType').value;
   const registrationNumber = document.querySelector('#editForm #registrationNumber').value;
   const certificateNumber = document.querySelector('#editForm #certificateNumber').value;
   const cargo = document.querySelector('#editForm #cargo').value;
@@ -516,6 +649,12 @@ function submitEditModal() {
   const receiptDate = document.querySelector('#editForm #receiptDate').value;
   const paymentAmount = document.querySelector('#editForm #paymentAmount').value;
 
+  // Retrieve the new fields
+  const quantity = document.querySelector('#editForm #quantity').value;
+  const quantityUnit = document.querySelector('#editForm #quantity_unit').value;
+  const costAmount = document.querySelector('#editForm #cost_amount').value;
+  const costCurrency = document.querySelector('#editForm #cost_currency').value;
+
   // Prepare the data to be sent to the backend
   const data = {
       office: office,
@@ -525,40 +664,45 @@ function submitEditModal() {
       companyAddress: companyAddress,
       companyStatus: companyStatus,
       companyType: companyType,
-      cargo: cargo,           // Expected to be the cargo id or value
-      exportCountry: exportCountry, // Expected to be the country id or value
-      originCountry: originCountry, // Expected to be the country id or value
+      cargo: cargo,
+      exportCountry: exportCountry,
+      originCountry: originCountry,
       processDate: processDate,
       receiptNumber: receiptNumber,
       receiptDate: receiptDate,
-      paymentAmount: paymentAmount
+      paymentAmount: paymentAmount,
+      // Include the new fields
+      quantity: quantity,
+      quantity_unit: quantityUnit,
+      cost: costAmount,
+      cost_currency: costCurrency
   };
 
-if (!certificateId) {
-    alert("لا يوجد شهادة محددة للتعديل!");
-    return;
+  if (!certificateId) {
+      alert("لا يوجد شهادة محددة للتعديل!");
+      return;
+  }
+
+  const url = `/update-certificate/${certificateId}/`;
+  const method = 'PUT';
+
+  fetch(url, {
+      method: method,
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(respData => {
+      if (respData.status === 'success') {
+          alert('تم تعديل البيانات بنجاح!');
+          closeEditModal();
+          // Optionally, refresh the table here
+      } else {
+          alert('خطأ: ' + respData.message);
+      }
+  })
+  .catch(error => console.error('Error:', error));
 }
-
-const url = `/update-certificate/${certificateId}/`;
-const method = 'PUT';
-
-// إرسال البيانات إلى السيرفر
-fetch(url, {
-    method: method,
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken') // إذا كنت بحاجة إلى CSRF Token
-    },
-    body: JSON.stringify(data) // تحويل البيانات إلى JSON
-})
-.then(response => response.json())
-.then(respData => {
-    if (respData.status === 'success') {
-        alert('تم تعديل البيانات بنجاح!');
-        closeEditModal(); // إغلاق المودال بعد الحفظ
-    } else {
-        alert('خطأ: ' + respData.message);
-    }
-})
-.catch(error => console.error('Error:', error));
-};

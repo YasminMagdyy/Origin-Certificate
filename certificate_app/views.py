@@ -9,6 +9,17 @@ import logging
 import unicodedata
 import re
 import string
+from django.http import HttpResponse
+from django.contrib import messages
+from djmoney.money import Money
+from decimal import Decimal, InvalidOperation
+import io
+import pandas as pd
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+
 
 def index(request):
     return render(request, 'index.html')
@@ -25,38 +36,15 @@ def country(request):
     countries = Country.objects.all()
     return render(request, 'country.html', {'countries': countries})
 
-# @csrf_exempt
-# def add_item(request):
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#         list_type = data.get('listType')
-#         item = data.get('item')
-
-#         if list_type and item:
-#             # Check if the item already exists in the database for the current list type
-#             if DynamicList.objects.filter(ListType=list_type, Item=item).exists():
-#                 return JsonResponse({'status': 'error', 'message': 'هذا العنصر موجود بالفعل!'}, status=400)
-
-#             # Save the item to the database for the current list type
-#             DynamicList.objects.create(ListType=list_type, Item=item)
-
-#             # If the item is added to exportCountry, also add it to originCountry (and vice versa)
-#             if list_type in ['exportCountry', 'originCountry']:
-#                 other_list_type = 'originCountry' if list_type == 'exportCountry' else 'exportCountry'
-
-#                 # Check if the item already exists in the other list type
-#                 if not DynamicList.objects.filter(ListType=other_list_type, Item=item).exists():
-#                     DynamicList.objects.create(ListType=other_list_type, Item=item)
-
-#             return JsonResponse({'status': 'success'})
-#         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+def generate_report(request):
+    # Retrieve all certificate data.
+    certificates = Certificate.objects.all()
     
-# @csrf_exempt
-# def get_items(request):
-#     if request.method == 'GET':
-#         list_type = request.GET.get('listType')
-#         items = DynamicList.objects.filter(ListType=list_type).values_list('Item', flat=True)
-#         return JsonResponse(list(items), safe=False)
+    # Optionally, you can apply filtering, aggregation, or sorting here.
+    context = {
+        'certificates': certificates,
+    }
+    return render(request, 'report.html', context)
 
 def remove_all_diacritics(text):
     """
@@ -215,75 +203,23 @@ def get_company_data(request):
         except Exception as e:
             print(f"Error: {e}")  # Add this line
             return JsonResponse({'error': str(e)}, status=500)
-                                         
-# @csrf_exempt
-# def save_certificate(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-            
-#             # Create or get Office
-#             office, created = Office.objects.get_or_create(
-#                 OfficeName=data['office'],
-#                 defaults={'BranchName': 'Main'}  # Adjust as needed
-#             )
-            
-#             # Create or get Company
-#             company, created = Company.objects.get_or_create(
-#                 CompanyName=data['companyName'],
-#                 defaults={
-#                     'CompanyAddress': data['companyAddress'],
-#                     'CompanyType': data['companyType'],
-#                     'CompanyStatus': data['companyStatus']
-#                 }
-#             )
-            
-#             # Create or get Export Country
-#             export_country, created = Country.objects.get_or_create(
-#                 CountryName=data['exportCountry']
-#             )
-            
-#             # Create or get Origin Country
-#             origin_country, created = Country.objects.get_or_create(
-#                 CountryName=data['originCountry']
-#             )
-            
-#             # Create or get Cargo
-#             cargo, created = Cargo.objects.get_or_create(
-#                 ExportedGoods=data['cargo'],
-#             )
-            
-#             # Create Certificate
-#             certificate = Certificate.objects.create(
-#                 Office=office,
-#                 Company=company,
-#                 RegistrationNumber=data['registrationNumber'],
-#                 CertificateNumber=data['certificateNumber'],
-#                 ExportCountry=export_country,  # Assign the Country instance
-#                 OriginCountry=origin_country,  # Assign the Country instance
-#                 ExportedGoods=cargo,  # Assign the Cargo instance
-#                 IssueDate=data['processDate'],
-#                 ReceiptNumber=data['receiptNumber'],
-#                 ReceiptDate=data['receiptDate'],
-#                 PaymentAmount=data['paymentAmount']
-#             )
-            
-#             return JsonResponse({'status': 'success', 'message': 'Certificate saved successfully!', 'certificateId': certificate.id})
-        
-#         except Exception as e:
-#             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    
-#     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-    
+                                             
+logger = logging.getLogger(__name__)
 @csrf_exempt
 def save_certificate(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-
+            
+            # Validate dropdown fields for CompanyStatus and CompanyType
+            if data['companyStatus'] not in ['مقيد', 'غير مقيد']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
+            if data['companyType'] not in ['شركه', 'فردي']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
+            
             # Normalize input text fields
-            office_name = normalize_text(data['office'])
-            registration_number = normalize_text(data['registrationNumber'])
+            office_name = normalize_text(data['office']) if data['office'] else None
+            registration_number = normalize_text(data['registrationNumber']) if data['registrationNumber'] else None
             certificate_number = normalize_text(data['certificateNumber'])
             company_name = normalize_text(data['companyName'])
             company_address = normalize_text(data['companyAddress'])
@@ -293,11 +229,17 @@ def save_certificate(request):
             export_country_value = normalize_text(data['exportCountry'])
             origin_country_value = normalize_text(data['originCountry'])
             
+            # Handle office and registrationNumber based on company status
+            if company_status == 'غير مقيد':
+                office = None
+                registration_number = None
+            else:
+                if office_name:
+                    office, _ = Office.objects.get_or_create(OfficeName=office_name)
+                else:
+                    office = None
+
             # Get or create related objects
-            office, _ = Office.objects.get_or_create(
-                OfficeName=office_name,
-                defaults={'BranchName': 'Main'}
-            )
             company, _ = Company.objects.get_or_create(
                 CompanyName=company_name,
                 defaults={
@@ -306,18 +248,21 @@ def save_certificate(request):
                     'CompanyStatus': company_status
                 }
             )
-            export_country, _ = Country.objects.get_or_create(
-                CountryName=export_country_value
-            )
-            origin_country, _ = Country.objects.get_or_create(
-                CountryName=origin_country_value
-            )
+            export_country, _ = Country.objects.get_or_create(CountryName=export_country_value)
+            origin_country, _ = Country.objects.get_or_create(CountryName=origin_country_value)
             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
             
+            # Retrieve new fields from data
+            quantity = data.get('quantity')
+            quantity_unit = data.get('quantity_unit')
+            cost_value = data.get('cost')
+            cost_currency = data.get('cost_currency')
+            
+            # Create the certificate including the new fields
             certificate = Certificate.objects.create(
-                Office=office,
+                Office=office,  # Office can be None if "غير مقيد"
                 Company=company,
-                RegistrationNumber=registration_number,
+                RegistrationNumber=registration_number,  # Can be None if "غير مقيد"
                 CertificateNumber=certificate_number,
                 ExportCountry=export_country,
                 OriginCountry=origin_country,
@@ -325,7 +270,10 @@ def save_certificate(request):
                 IssueDate=data['processDate'],
                 ReceiptNumber=data['receiptNumber'],
                 ReceiptDate=data['receiptDate'],
-                PaymentAmount=data['paymentAmount']
+                PaymentAmount=data['paymentAmount'],
+                quantity=quantity,
+                quantity_unit=quantity_unit,
+                cost=Money(cost_value, cost_currency) if cost_value and cost_currency else None
             )
             
             return JsonResponse({
@@ -335,19 +283,22 @@ def save_certificate(request):
             })
         
         except Exception as e:
+            logger.exception("Error saving certificate:")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def update_certificate(request, certificate_id):
-    """
-    Updates an existing certificate.
-    All text-based fields are normalized before updating.
-    """
     if request.method == 'PUT':
         try:
             data = json.loads(request.body)
+            
+            # Validate dropdown fields for CompanyStatus and CompanyType
+            if data.get('companyStatus') not in ['مقيد', 'غير مقيد']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
+            if data.get('companyType') not in ['شركه', 'فردي']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
             
             # Normalize input text fields
             office_name = normalize_text(data.get('office'))
@@ -361,12 +312,18 @@ def update_certificate(request, certificate_id):
             export_country_value = normalize_text(data.get('exportCountry'))
             origin_country_value = normalize_text(data.get('originCountry'))
             
+            # Handle office and registrationNumber based on company status
+            if company_status == 'غير مقيد':
+                office = None
+                registration_number = None
+            else:
+                if office_name:
+                    office, _ = Office.objects.get_or_create(OfficeName=office_name)
+                else:
+                    office = None
+
             # Get or create related objects
-            office, _ = Office.objects.get_or_create(
-                OfficeName=office_name,
-                defaults={'BranchName': 'Main'}
-            )
-            company, _ = Company.objects.get_or_create(
+            company, created = Company.objects.get_or_create(
                 CompanyName=company_name,
                 defaults={
                     'CompanyAddress': company_address,
@@ -374,14 +331,30 @@ def update_certificate(request, certificate_id):
                     'CompanyStatus': company_status
                 }
             )
-            export_country, _ = Country.objects.get_or_create(
-                CountryName=export_country_value
-            )
-            origin_country, _ = Country.objects.get_or_create(
-                CountryName=origin_country_value
-            )
+            if not created:
+                # Update the company's fields if changes were made
+                company.CompanyAddress = company_address
+                company.CompanyType = company_type
+                company.CompanyStatus = company_status
+                company.save()
+            
+            export_country, _ = Country.objects.get_or_create(CountryName=export_country_value)
+            origin_country, _ = Country.objects.get_or_create(CountryName=origin_country_value)
             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
             
+            # Retrieve new fields
+            quantity = data.get('quantity')
+            quantity_unit = data.get('quantity_unit')
+            cost_value = data.get('cost')
+            cost_currency = data.get('cost_currency')
+            
+            # Validate and convert cost_value to Decimal
+            try:
+                cost_value = Decimal(str(cost_value)) if cost_value else None
+            except InvalidOperation:
+                return JsonResponse({'status': 'error', 'message': 'Invalid cost value'}, status=400)
+            
+            # Update the certificate
             certificate = Certificate.objects.get(id=certificate_id)
             certificate.Office = office
             certificate.Company = company
@@ -394,17 +367,202 @@ def update_certificate(request, certificate_id):
             certificate.ReceiptNumber = data['receiptNumber']
             certificate.ReceiptDate = data['receiptDate']
             certificate.PaymentAmount = data['paymentAmount']
+            certificate.quantity = quantity
+            certificate.quantity_unit = quantity_unit
+            certificate.cost = Money(cost_value, cost_currency) if cost_value and cost_currency else None
             certificate.save()
             
             return JsonResponse({'status': 'success', 'certificateId': certificate.id}, status=200)
         except Certificate.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Certificate not found'}, status=404)
         except Exception as e:
+            logger.exception("Error updating certificate:")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-logger = logging.getLogger(__name__)
+# @csrf_exempt
+# def save_certificate(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+            
+#             # Validate dropdown fields for CompanyStatus and CompanyType
+#             if data['companyStatus'] not in ['مقيد', 'غير مقيد']:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
+#             if data['companyType'] not in ['شركه', 'فردي']:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
+            
+#             # Normalize input text fields
+#             office_name = normalize_text(data['office']) if data['office'] else None
+#             registration_number = normalize_text(data['registrationNumber']) if data['registrationNumber'] else None
+#             certificate_number = normalize_text(data['certificateNumber'])
+#             company_name = normalize_text(data['companyName'])
+#             company_address = normalize_text(data['companyAddress'])
+#             company_status = normalize_text(data['companyStatus'])
+#             company_type = normalize_text(data['companyType'])
+#             cargo_value = normalize_text(data['cargo'])
+#             export_country_value = normalize_text(data['exportCountry'])
+#             origin_country_value = normalize_text(data['originCountry'])
+            
+#             # Get or create related objects (handle office being None)
+#             if company_status == 'مقيد' and office_name:
+#                 office, _ = Office.objects.get_or_create(
+#                     OfficeName=office_name,
+#                 )
+#             else:
+#                 office = None
+
+#             company, _ = Company.objects.get_or_create(
+#                 CompanyName=company_name,
+#                 defaults={
+#                     'CompanyAddress': company_address,
+#                     'CompanyType': company_type,
+#                     'CompanyStatus': company_status
+#                 }
+#             )
+#             export_country, _ = Country.objects.get_or_create(
+#                 CountryName=export_country_value
+#             )
+#             origin_country, _ = Country.objects.get_or_create(
+#                 CountryName=origin_country_value
+#             )
+#             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
+            
+#             # Retrieve new fields from data
+#             quantity = data.get('quantity')
+#             quantity_unit = data.get('quantity_unit')
+#             cost_value = data.get('cost')
+#             cost_currency = data.get('cost_currency')
+            
+#             # Create the certificate including the new fields.
+#             certificate = Certificate.objects.create(
+#                 Office=office,  # Office can be None if "غير مقيد"
+#                 Company=company,
+#                 RegistrationNumber=registration_number,
+#                 CertificateNumber=certificate_number,
+#                 ExportCountry=export_country,
+#                 OriginCountry=origin_country,
+#                 ExportedGoods=cargo_obj,
+#                 IssueDate=data['processDate'],
+#                 ReceiptNumber=data['receiptNumber'],
+#                 ReceiptDate=data['receiptDate'],
+#                 PaymentAmount=data['paymentAmount'],
+#                 quantity=quantity,
+#                 quantity_unit=quantity_unit,
+#                 cost=Money(cost_value, cost_currency)  # MoneyField assignment
+#             )            
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'message': 'Certificate saved successfully!',
+#                 'certificateId': certificate.id
+#             })
+        
+#         except Exception as e:
+#             logger.exception("Error saving certificate:")
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+# @csrf_exempt
+# def update_certificate(request, certificate_id):
+#     """
+#     Updates an existing certificate.
+#     All text-based fields are normalized before updating.
+#     """
+#     if request.method == 'PUT':
+#         try:
+#             data = json.loads(request.body)
+            
+#             # Validate dropdown fields for CompanyStatus and CompanyType
+#             if data.get('companyStatus') not in ['مقيد', 'غير مقيد']:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
+#             if data.get('companyType') not in ['شركه', 'فردي']:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
+            
+#             # Normalize input text fields
+#             office_name = normalize_text(data.get('office'))
+#             registration_number = normalize_text(data.get('registrationNumber'))
+#             certificate_number = normalize_text(data.get('certificateNumber'))
+#             company_name = normalize_text(data.get('companyName'))
+#             company_address = normalize_text(data.get('companyAddress'))
+#             company_status = normalize_text(data.get('companyStatus'))
+#             company_type = normalize_text(data.get('companyType'))
+#             cargo_value = normalize_text(data.get('cargo'))
+#             export_country_value = normalize_text(data.get('exportCountry'))
+#             origin_country_value = normalize_text(data.get('originCountry'))
+            
+#             # Get or create related objects for Office, Country, and Cargo
+#             office, _ = Office.objects.get_or_create(
+#                 OfficeName=office_name,
+#                 defaults={'BranchName': 'Main'}
+#             )
+#             export_country, _ = Country.objects.get_or_create(
+#                 CountryName=export_country_value
+#             )
+#             origin_country, _ = Country.objects.get_or_create(
+#                 CountryName=origin_country_value
+#             )
+#             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
+            
+#             # For Company: update if it exists; otherwise, create a new one.
+#             company, created = Company.objects.get_or_create(
+#                 CompanyName=company_name,
+#                 defaults={
+#                     'CompanyAddress': company_address,
+#                     'CompanyType': company_type,
+#                     'CompanyStatus': company_status
+#                 }
+#             )
+#             if not created:
+#                 # Update the company's fields if changes were made
+#                 company.CompanyAddress = company_address
+#                 company.CompanyType = company_type
+#                 company.CompanyStatus = company_status
+#                 company.save()
+            
+#             # Retrieve new fields
+#             quantity = data.get('quantity')
+#             quantity_unit = data.get('quantity_unit')
+#             cost_value = data.get('cost')
+#             cost_currency = data.get('cost_currency')
+            
+#             # Validate and convert cost_value to Decimal
+#             try:
+#                 cost_value = Decimal(str(cost_value)) if cost_value else None
+#             except InvalidOperation:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid cost value'}, status=400)
+            
+#             certificate = Certificate.objects.get(id=certificate_id)
+#             certificate.Office = office
+#             certificate.Company = company
+#             certificate.RegistrationNumber = registration_number
+#             certificate.CertificateNumber = certificate_number
+#             certificate.ExportCountry = export_country
+#             certificate.OriginCountry = origin_country
+#             certificate.ExportedGoods = cargo_obj
+#             certificate.IssueDate = data['processDate']
+#             certificate.ReceiptNumber = data['receiptNumber']
+#             certificate.ReceiptDate = data['receiptDate']
+#             certificate.PaymentAmount = data['paymentAmount']
+            
+#             # Update new fields
+#             certificate.quantity = quantity
+#             certificate.quantity_unit = quantity_unit
+#             if cost_value is not None and cost_currency:
+#                 certificate.cost = Money(cost_value, cost_currency)
+#             else:
+#                 certificate.cost = None
+#             certificate.save()
+            
+#             return JsonResponse({'status': 'success', 'certificateId': certificate.id}, status=200)
+#         except Certificate.DoesNotExist:
+#             return JsonResponse({'status': 'error', 'message': 'Certificate not found'}, status=404)
+#         except Exception as e:
+#             logger.exception("Error updating certificate:")
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 def filter_certificates(request):
     # Retrieve query parameters (if blank, they are empty strings)
@@ -425,10 +583,10 @@ def filter_certificates(request):
     # Build a list of certificate dictionaries
     results = []
     for cert in certificates:
+        office_name = cert.Office.OfficeName if cert.Office else 'null'
         results.append({
             'id': cert.id,
-            'office_name': cert.Office.OfficeName,
-            'branch_name': cert.Office.BranchName,
+            'office_name': office_name,
             'registration_number': cert.RegistrationNumber,
             'certificate_number': cert.CertificateNumber,
             'company_name': cert.Company.CompanyName,
@@ -442,6 +600,13 @@ def filter_certificates(request):
             'receipt_number': cert.ReceiptNumber,
             'receipt_date': cert.ReceiptDate.strftime('%Y-%m-%d') if cert.ReceiptDate else None,
             'payment_amount': float(cert.PaymentAmount) if cert.PaymentAmount is not None else None,
+            # Include both display and raw values for the new fields:
+            'quantity_display': cert.quantity_display,  # e.g. "10 kg"
+            'quantity': str(cert.quantity) if cert.quantity is not None else "",
+            'quantity_unit': cert.quantity_unit,
+            'cost_display': str(cert.cost),  # e.g. "100.00 USD"
+            'cost_amount': str(cert.cost.amount) if cert.cost is not None else "",
+            'cost_currency': str(cert.cost.currency) if cert.cost is not None else ""
         })
 
     return JsonResponse({'certificates': results})
@@ -474,54 +639,6 @@ def delete_filtered_certificate(request, certificate_id):
         return JsonResponse({'status': 'error', 'message': 'Certificate not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-# @csrf_exempt
-# def update_certificate(request, certificate_id):
-#     if request.method == 'PUT':
-#         try:
-#             # جلب البيانات من الطلب
-#             data = json.loads(request.body)
-#             office = data.get('office')
-#             companyName = data.get('companyName')
-#             companyAddress = data.get('companyAddress')
-#             companyStatus = data.get('companyStatus')
-#             companyType = data.get('companyType')
-#             certificate_number = data.get('certificateNumber')
-#             export_country = data.get('exportCountry')
-#             origin_country = data.get('originCountry')
-#             exported_goods = data.get('cargo')
-#             issue_date = data.get('processDate')
-#             receipt_number = data.get('receiptNumber')
-#             receipt_date = data.get('receiptDate')
-#             payment_amount = data.get('paymentAmount')
-
-#             # تحديث السجل بناءً على الـ id``
-#             certificate = Certificate.objects.get(id=certificate_id)
-#             certificate.office_id = office
-#             certificate.Company.CompanyName = companyName
-#             certificate.Company.companyAddress = companyAddress
-#             certificate.Company.companyStatus = companyStatus
-#             certificate.Company.companyType = companyType
-#             certificate.Company.save()
-#             certificate.certificate_number = certificate_number
-#             certificate.ExportCountry.CountryName = export_country
-#             certificate.OriginCountry.CountryName = origin_country
-#             certificate.CountryName.save()
-#             certificate.ExportedGoods.ExportedGoods = exported_goods
-#             certificate.ExportedGoods.save()
-#             certificate.IssueDate = issue_date
-#             certificate.ReceiptNumber = receipt_number
-#             certificate.ReceiptDate = receipt_date
-#             certificate.PaymentAmount = payment_amount
-#             certificate.save()
-
-#             return JsonResponse({'status': 'success', 'certificateId': certificate.id}, status=200)
-#         except Certificate.DoesNotExist:
-#             return JsonResponse({'status': 'error', 'message': 'Certificate not found'}, status=404)
-#         except Exception as e:
-#             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-#     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def delete_certificate(request, certificate_id):
@@ -607,4 +724,150 @@ def get_cargo_options(request):
 def get_country_options(request):
     countries = Country.objects.all().values('id', 'CountryName')
     return JsonResponse({'countries': list(countries)})
+
+@csrf_exempt
+def report_view(request):
+    # Retrieve filtering criteria from GET parameters
+    process_date_from = request.GET.get('process_date_from', '')
+    process_date_to = request.GET.get('process_date_to', '')
+    cargo_name = request.GET.get('cargo', '')
+    export_country_name = request.GET.get('export_country', '')
+
+    if not (process_date_from or process_date_to or cargo_name or export_country_name):
+        messages.error(request, "يرجى إدخال تاريخ أو بضاعة أو بلد تصدير للبحث.")
+        certificates = Certificate.objects.none()
+    else:
+        certificates = Certificate.objects.all()
+        if process_date_from:
+            certificates = certificates.filter(IssueDate__gte=process_date_from)
+        if process_date_to:
+            certificates = certificates.filter(IssueDate__lte=process_date_to)
+        if cargo_name:
+            certificates = certificates.filter(ExportedGoods_id=cargo_name)
+
+        if export_country_name:
+            certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
+
+    context = {
+        'certificates': certificates,
+        'process_date_from': process_date_from,
+        'process_date_to': process_date_to,
+        'selected_cargo': cargo_name,
+        'selected_country': export_country_name,
+        'cargos': Cargo.objects.all(),
+        'countries': Country.objects.all(),
+    }
+    return render(request, 'report.html', context)
+    
+def download_report(request, file_format):
+    process_date_from = request.GET.get('process_date_from', '')
+    process_date_to = request.GET.get('process_date_to', '')
+    cargo_name = request.GET.get('cargo', '')
+    export_country_name = request.GET.get('export_country', '')
+
+    # تصفية البيانات بناءً على المعايير
+    certificates = Certificate.objects.all()
+    if process_date_from:
+        certificates = certificates.filter(IssueDate__gte=process_date_from)
+    if process_date_to:
+        certificates = certificates.filter(IssueDate__lte=process_date_to)
+    if cargo_name:
+        certificates = certificates.filter(ExportedGoods_id=cargo_name)
+    if export_country_name:
+        certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
+
+    # إنشاء البيانات كمصفوفة
+    data = [
+        [
+            str(cert.id),
+            str(cert.Office),
+            str(cert.RegistrationNumber),
+            str(cert.CertificateNumber),
+            str(cert.Company.CompanyName),
+            str(cert.Company.CompanyAddress),
+            str(cert.Company.CompanyStatus),
+            str(cert.Company.CompanyType),
+            str(cert.ExportedGoods),
+            str(cert.OriginCountry),
+            str(cert.ExportCountry),
+            str(cert.IssueDate),
+            str(cert.ReceiptNumber),
+            str(cert.ReceiptDate),
+            str(cert.PaymentAmount)
+        ]
+        for cert in certificates
+    ]
+
+    # العناوين الرئيسية
+    headers = [
+        "المعرف", "اسم المكتب", "رقم السجل", "رقم الشهادة","اسم الشركة","عنوان الشركة","حالة الشركة","نوع الشركة",
+        "البضائع", "بلد المنشأ", "بلد التصدير", "تاريخ العملية",
+        "رقم الايصال", "تاريخ الايصال", "القيمة المدفوعة"
+    ]
+
+    # إذا كان المطلوب PDF
+    if file_format == "pdf":
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="report.pdf"'
+
+        buffer = io.BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=letter)
+
+        # 1) تسجيل الخط: استخدم خطاً يغطي العربية والإنجليزية والأرقام
+        # Example: "C:\\path\\to\\Cairo-Regular.ttf"
+        pdfmetrics.registerFont(TTFont("ArabicFull", "C:/Users/Menna.nabil/Downloads/Cairo/Cairo-VariableFont_slnt,wght.ttf"))
+        pdf.setFont("ArabicFull", 12)
+
+        # 2) عنوان التقرير بالعربية
+        title_ar = shape_arabic_text("تقرير الشهادات")
+        pdf.drawRightString(550, 750, title_ar)
+
+        # 3) طباعة العناوين الرئيسية
+        y = 720
+        for header in headers:
+            header_ar = shape_arabic_text(header)
+            pdf.drawRightString(550, y, header_ar)
+            y -= 20
+            # 4) طباعة البيانات بشكل جدولي مبسط
+        # Adjust the columns from right to left
+        # We'll have 12 columns (per the headers), each 80 px wide (approx).
+        # Starting from x=550 going leftwards.
+        y = 700
+        for row in data:
+            # For each column in the row, we either draw it from the right or from the left
+            # if it’s Arabic or numeric.
+            x_offset = 550
+            for col_value in row:
+                shaped_value = shape_arabic_text(col_value)
+# If it has Arabic, we do drawRightString
+                # If purely numeric or English, we could do drawString
+                # But let's keep it consistent and just do drawRightString:
+                pdf.drawRightString(x_offset, y, shaped_value)
+
+                x_offset -= 80  # move to the left for the next column
+            y -= 20
+
+        pdf.save()
+        buffer.seek(0)
+        response.write(buffer.read())
+        return response
+
+    # إذا كان المطلوب Excel
+    elif file_format == "excel":
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = 'attachment; filename="report.xlsx"'
+
+        df = pd.DataFrame(data, columns=headers)
+        with io.BytesIO() as output:
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=False, sheet_name="Report")
+            output.seek(0)
+            response.write(output.read())
+        return response
+
+    # في حالة وجود خطأ في التنسيق
+    return HttpResponse("Invalid file format", status=400)
+
 

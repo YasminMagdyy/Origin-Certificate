@@ -342,3 +342,36 @@ table tr:hover {
   width: 100%;       /* Use full width of the modal container */
   height: auto;      /* Allow height to adjust based on content */
 }
+
+/* Add these styles to your existing styles.css */
+.filter-options {
+  margin-bottom: 20px;
+}
+
+.filter-options label {
+  margin-right: 10px;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.report-table th, .report-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.report-table th {
+  background-color: #f4f4f4;
+}
+
+.download-buttons {
+  margin-top: 20px;
+}
+
+.download-buttons button {
+  margin-right: 10px;
+}

@@ -6,7 +6,7 @@ urlpatterns = [
     path('filter/', views.filter, name='filter'),
     path('cargo/', views.cargo, name='cargo'),
     path('countries/', views.country, name='country'),
-    # path('search-certificates/', views.search_certificates, name='search_certificates'),
+    path('report/', views.report_view, name='report'),
     path('add_item/', views.add_item, name='add_item'),
     path('get_items/', views.get_items, name='get_items'),
     path('save-certificate/', views.save_certificate, name='save_certificate'),
@@ -24,5 +24,6 @@ urlpatterns = [
     # Endpoints to refresh dropdown option lists:
     path('get-cargo-options/', views.get_cargo_options, name='get_cargo_options'),
     path('get-country-options/', views.get_country_options, name='get_country_options'),
+    path('report_download/<str:file_format>/', views.download_report, name='report_download'), 
 
 ]
