@@ -278,13 +278,13 @@ document.getElementById('saveButton').addEventListener('click', function () {
         createCertificateTable({
           id: certificateId,
           office: office,
-          branch: 'فرع افتراضي', // Adjust if branch data is available
+          // branch: 'فرع افتراضي', // Adjust if branch data is available
+          registrationNumber: registrationNumber,
+          certificateNumber: certificateNumber,
           companyName: companyName,
           companyAddress: companyAddress,
           companyStatus: companyStatus,
           companyType: companyType,
-          registrationNumber: registrationNumber,
-          certificateNumber: certificateNumber,
           exportCountry: exportCountry,
           originCountry: originCountry,
           cargo: cargo,
@@ -334,16 +334,16 @@ function createCertificateTable(formData) {
 
   const headers = [
     'اسم المكتب',
-    'اسم الفرع',
-    'اسم الشركة',
-    'عنوان الشركة',
-    'حالة الشركة',
-    'نوع الشركة',
+    // 'اسم الفرع',
     'رقم السجل',
     'رقم الشهادة',
+    'اسم الشركة',
+    'عنوان الشركة',
+    'حالة المنشأه',
+    'نوع الشركة',
+    'البضاعة',
     'بلد التصدير',
     'بلد المنشأ',
-    'البضاعة',
     'تاريخ العملية',
     'القيمة',
     'التكلفة',
@@ -369,16 +369,16 @@ function createCertificateTable(formData) {
   // Prepare the data array in the same order as headers
   const rowData = [
     formData.office,
-    formData.branch,
+    // formData.branch,
+    formData.registrationNumber,
+    formData.certificateNumber,
     formData.companyName,
     formData.companyAddress,
     formData.companyStatus,
     formData.companyType,
-    formData.registrationNumber,
-    formData.certificateNumber,
+    formData.cargo,
     formData.exportCountry,
     formData.originCountry,
-    formData.cargo,
     formData.issueDate,
     formData.quantity,
     formData.cost,
@@ -400,12 +400,12 @@ function createCertificateTable(formData) {
   editButton.addEventListener('click', function () {
     // Populate form fields with current data
     document.getElementById('office').value = formData.office;
+    document.getElementById('registrationNumber').value = formData.registrationNumber;
+    document.getElementById('certificateNumber').value = formData.certificateNumber;
     document.getElementById('companyName').value = formData.companyName;
     document.getElementById('companyAddress').value = formData.companyAddress;
     document.getElementById('companyStatus').value = formData.companyStatus;
     document.getElementById('companyType').value = formData.companyType;
-    document.getElementById('registrationNumber').value = formData.registrationNumber;
-    document.getElementById('certificateNumber').value = formData.certificateNumber;
     document.getElementById('cargo').value = formData.cargo;
     document.getElementById('exportCountry').value = formData.exportCountry;
     document.getElementById('originCountry').value = formData.originCountry;
@@ -480,9 +480,9 @@ function searchCertificates() {
             <td>${cert.company_address}</td>
             <td>${cert.company_status}</td>
             <td>${cert.company_type}</td>
+            <td>${cert.exported_goods}</td>
             <td>${cert.export_country}</td>
             <td>${cert.origin_country}</td>
-            <td>${cert.exported_goods}</td>
             <td>${cert.issue_date}</td>
             <td>${cert.quantity_display || 'N/A'}</td>
             <td>${cert.cost_display || 'N/A'}</td>

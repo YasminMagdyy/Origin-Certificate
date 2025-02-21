@@ -80,12 +80,6 @@
             <label for="certificateNumber">رقم الشهادة:</label>
             <input type="text" id="certificateNumber" placeholder="رقم الشهاده" required>
           </div>
-        </form>
-      </div>
-      
-      <!-- Left Div -->
-      <div class="form-container left">
-        <form id="leftForm">
           <div class="form-group">
             <label for="cargo">البضاعه:</label>
             <select id="cargo" required>
@@ -100,6 +94,13 @@
             <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
           </div>            
 
+
+        </form>
+      </div>
+      
+      <!-- Left Div -->
+      <div class="form-container left">
+        <form id="leftForm">
           <div class="form-group">
             <label for="originCountry">بلد المنشأ:</label>
             <select id="originCountry" required>
@@ -107,12 +108,12 @@
             </select>
             <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
           </div>
-                  
+
           <div class="form-group">
             <label for="processDate">تاريخ العمليه:</label>
             <input type="date" id="processDate" placeholder="تاريخ العمليه" required>
           </div>
-
+          
           <div class="form-group">
             <label for="receiptNumber">رقم الايصال:</label>
             <input type="text" id="receiptNumber" placeholder="رقم الايصال" required>

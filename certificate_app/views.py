@@ -417,25 +417,8 @@ def filter_certificates(request):
     return JsonResponse({'certificates': results})
 
 @csrf_exempt
-@require_http_methods(["PUT"])
-def edit_filtered_certificate(request, certificate_id):
-    try:
-        data = json.loads(request.body)
-        certificate = Certificate.objects.get(id=certificate_id)
-        # For example, update the certificate_number if provided.
-        if 'certificate_number' in data:
-            certificate.CertificateNumber = data['certificate_number']
-        # Extend here if you wish to update additional fields.
-        certificate.save()
-        return JsonResponse({'status': 'success', 'message': 'Certificate updated successfully.'})
-    except Certificate.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Certificate not found.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-@csrf_exempt
 @require_http_methods(["DELETE"])
-def delete_filtered_certificate(request, certificate_id):
+def delete_certificate(request, certificate_id):
     try:
         certificate = Certificate.objects.get(id=certificate_id)
         certificate.delete()
@@ -446,25 +429,6 @@ def delete_filtered_certificate(request, certificate_id):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 @csrf_exempt
-def delete_certificate(request, certificate_id):
-    if request.method == 'DELETE':
-        try:
-            logger.info(f'Attempting to delete certificate with ID: {certificate_id}')  # Log the ID
-            certificate = Certificate.objects.get(id=certificate_id)
-            certificate.delete()
-            logger.info(f'Successfully deleted certificate with ID: {certificate_id}')  # Log success
-            return JsonResponse({'status': 'success'}, status=200)
-        except Certificate.DoesNotExist:
-            logger.error(f'Certificate not found with ID: {certificate_id}')  # Log error
-            return JsonResponse({'status': 'error', 'message': 'Certificate not found'}, status=404)
-        except Exception as e:
-            logger.error(f'Error deleting certificate: {str(e)}')  # Log error
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    logger.error('Invalid request method for delete_certificate')  # Log error
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
-@csrf_exempt
 @require_http_methods(["PUT"])
 def update_cargo(request, cargo_id):
     try:
@@ -472,8 +436,10 @@ def update_cargo(request, cargo_id):
         new_goods = data.get('ExportedGoods')
         if new_goods is None:
             return JsonResponse({'status': 'error', 'message': 'ExportedGoods is required.'}, status=400)
+        # Apply normalization on the new cargo text
+        normalized_goods = normalize_text(new_goods)
         cargo = Cargo.objects.get(id=cargo_id)
-        cargo.ExportedGoods = new_goods
+        cargo.ExportedGoods = normalized_goods
         cargo.save()
         return JsonResponse({'status': 'success', 'message': 'Cargo updated successfully.'})
     except Cargo.DoesNotExist:
@@ -501,8 +467,10 @@ def update_country(request, country_id):
         new_country_name = data.get('CountryName')
         if new_country_name is None:
             return JsonResponse({'status': 'error', 'message': 'CountryName is required.'}, status=400)
+        # Apply normalization on the new country name
+        normalized_country = normalize_text(new_country_name)
         country = Country.objects.get(id=country_id)
-        country.CountryName = new_country_name
+        country.CountryName = normalized_country
         country.save()
         return JsonResponse({'status': 'success', 'message': 'Country updated successfully.'})
     except Country.DoesNotExist:

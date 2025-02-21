@@ -11,7 +11,7 @@ body {
 }
 
 #header {
-  font-size: 18px; /* Slightly smaller header text */
+  font-size: 15px;
   font-weight: bold;
 }
 
@@ -42,7 +42,7 @@ body {
 }
 
 .menu-btn {
-  font-size: 20px; /* Smaller menu button */
+  font-size: 20; 
   cursor: pointer;
   background: none;
   border: none;
@@ -79,12 +79,12 @@ body {
 
 /* Container */
 .container {
-  max-width: 1200px; /* Reduced maximum width */
-  margin: 120px auto; /* Reduced top margin */
-  padding: 40px; /* Reduced padding */
+  max-width: 1000px; 
+  margin: 90px auto; 
+  padding: 30px; 
   background-color: #ffffff;
-  border-radius: 20px; /* Reduced border radius */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+  border-radius: 20px; 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
 }
 
 /* Heading Styling */
@@ -102,27 +102,26 @@ h1 {
 /* Filter Section */
 .filter {
   flex: 1;
-  padding: 10px; /* Reduced padding */
-  background: linear-gradient(to bottom right, #738e9c, #6c8ba8);
-  border-radius: 10px; /* Smaller border radius */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+  padding: 10px; 
+  border-radius: 10px; 
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
   margin-top: 10px;
 }
 
 /* Form Row */
 .form-row {
   display: flex;
-  gap: 15px; /* Reduced gap */
-  margin-bottom: 15px; /* Reduced margin */
+  gap: 15px; 
+  margin-bottom: 15px; 
 }
 
 /* Form Containers */
 .form-container {
   flex: 1;
   padding: 10px; /* Reduced padding */
-  background: linear-gradient(to bottom right, #738e9c, #6c8ba8);
+  /* background: linear-gradient(to bottom right, #738e9c, #6c8ba8); */
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Form Group */
@@ -138,7 +137,7 @@ h1 {
   margin-bottom: 3px; /* Tighter spacing */
   font-weight: bold;
   color: #1b2e49;
-  font-size: 14px; /* Smaller font size */
+  font-size: 12px;
   text-align: right;
 }
 
@@ -149,7 +148,7 @@ h1 {
   padding: 8px; /* Reduced padding */
   border: 2px solid #ced4da;
   border-radius: 6px; /* Smaller border radius */
-  font-size: 12px; /* Smaller text */
+  font-size: 10px; /* Smaller text */
   transition: border-color 0.3s ease;
   text-align: right;
   box-sizing: border-box;
@@ -175,7 +174,7 @@ button {
 }
 
 button:hover {
-  background-color: #cebcb9;
+  background-color: #aec4e3;
 }
 
 /* Table Styling */
@@ -260,12 +259,7 @@ table tr:hover {
 
 #saveButton {
   padding: 10px 20px; /* Reduced padding */
-  background-color: #1b2e49;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px; /* Smaller font size */
+  font-size: 16px;
   transition: background-color 0.3s;
 }
 
@@ -309,11 +303,6 @@ table tr:hover {
 /* Add Button */
 .add-button {
   padding: 8px 10px; /* Reduced padding */
-  background-color: #1b2e49;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
   font-size: 12px; /* Smaller font size */
   transition: background-color 0.3s ease;
   margin-top: 5px; /* Reduced margin */
@@ -326,7 +315,7 @@ table tr:hover {
 /* Placeholder Text */
 ::placeholder {
   color: #000000;
-  font-size: 13px; /* Slightly smaller placeholder text */
+  font-size: 12px; 
 }
 
 /* Revised Edit Modal CSS */
@@ -374,4 +363,8 @@ table tr:hover {
 
 .download-buttons button {
   margin-right: 10px;
+}
+a{
+  color: white;
+  text-decoration: none;
 }

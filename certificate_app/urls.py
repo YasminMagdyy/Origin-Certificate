@@ -14,7 +14,7 @@ urlpatterns = [
     path('get-company-data/', views.get_company_data, name='get_company_data'),
     # New endpoints for certificate update and delete with new function names:
     path('update-certificate/<int:certificate_id>/', views.update_certificate, name='update_certificate'),
-    path('delete-certificate/<int:certificate_id>/', views.delete_filtered_certificate, name='delete_filtered_certificate'),
+    path('delete-certificate/<int:certificate_id>/', views.delete_certificate, name='delete_certificate'),
     # New endpoints for Cargo update and delete
     path('update-cargo/<int:cargo_id>/', views.update_cargo, name='update_cargo'),
     path('delete-cargo/<int:cargo_id>/', views.delete_cargo, name='delete_cargo'),
