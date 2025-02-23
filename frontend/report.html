@@ -7,20 +7,27 @@
       body {
           font-family: 'Arial', sans-serif;
       }
-  </style>
+   </style>
    <title>تقرير الشهادات</title>
    {% load static %}
    <link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
 <body>
    <nav class="navbar">
-      <div class="navbar-right">
-         <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
-         <label id="header">الغرفة التجارية</label>
+      <div class="navbar-right" dir="ltr">
+         <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label>
+         <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
+         <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
       </div>
+  
+      <div class="navbar-left" dir="rtl">
+         <label id="headerLeft2"> Origin Certificate System | </label>
+         <label id="headerLeft"> Alexandria Chamber of Commerce </label>
+      </div>
+  
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-   </nav>
-
+    </nav>
+  
    <div class="sidebar" id="sidebar">
       <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
       <a href="{% url 'index' %}">الصفحة الرئيسية</a>
@@ -30,105 +37,117 @@
       <a href="{% url 'report' %}">تقرير</a>
    </div>
 
-   <div class="container">
-      <h1>تقرير الشهادات</h1>
-      <form method="get" action="{% url 'report' %}">
-         <div class="form-group">
-            <label for="process_date_from">تاريخ العملية من:</label>
-            <input type="date" id="process_date_from" name="process_date_from" value="{{ process_date_from }}">
-         </div>
-         <div class="form-group">
-            <label for="process_date_to">تاريخ العملية إلى:</label>
-            <input type="date" id="process_date_to" name="process_date_to" value="{{ process_date_to }}">
-         </div>
-         <div class="form-group">
-            <label for="cargo">البضاعة:</label>
-            <select name="cargo" id="cargo">
-               <option value="">اختر البضاعة</option>
-               {% for item in cargos %}
-               <option value="{{ item.id }}" {% if item.id|stringformat:"s" == selected_cargo %}selected{% endif %}>
+   <!-- Content Wrapper -->
+   <div class="content-wrapper">
+      <div class="container">
+         <h1>تقرير الشهادات</h1>
+         <form method="get" action="{% url 'report' %}">
+            <div class="form-group">
+               <label for="process_date_from">تاريخ العملية من:</label>
+               <input type="date" id="process_date_from" name="process_date_from" value="{{ process_date_from }}">
+            </div>
+            <div class="form-group">
+               <label for="process_date_to">تاريخ العملية إلى:</label>
+               <input type="date" id="process_date_to" name="process_date_to" value="{{ process_date_to }}">
+            </div>
+            <div class="form-group">
+               <label for="cargo">البضاعة:</label>
+               <select name="cargo" id="cargo">
+                  <option value="">اختر البضاعة</option>
+                  {% for item in cargos %}
+                  <option value="{{ item.id }}" {% if item.id|stringformat:"s" == selected_cargo %}selected{% endif %}>
                      {{ item.ExportedGoods }}
                   </option>
-               {% endfor %}
-            </select>
-         </div>
-         <div class="form-group">
-            <label for="export_country">بلد التصدير:</label>
-            <select name="export_country" id="export_country">
-               <option value="">اختر بلد التصدير</option>
-               {% for country in countries %}
+                  {% endfor %}
+               </select>
+            </div>
+            <div class="form-group">
+               <label for="export_country">بلد التصدير:</label>
+               <select name="export_country" id="export_country">
+                  <option value="">اختر بلد التصدير</option>
+                  {% for country in countries %}
                   <option value="{{ country.CountryName }}" {% if country.CountryName == selected_country %}selected{% endif %}>
                      {{ country.CountryName }}
                   </option>
-               {% endfor %}
-            </select>
-         </div>
-         <button type="submit">موافق</button>
-      </form>
+                  {% endfor %}
+               </select>
+            </div>
+            <button type="submit">موافق</button>
+         </form>
 
-      <hr>
-      <h2>نتائج التقرير</h2>
-      <table id = 'certificatesTable'>
-         <thead>
-            <tr>
-               <th>المعرف</th>
-               <th>اسم المكتب</th>
-               <!-- <th>اسم الفرع</th> -->
-               <th>رقم السجل</th>
-               <th>رقم الشهادة</th>
-               <th>اسم الشركة</th>
-               <th>عنوان الشركة</th>
-               <th>حالة المنشأه</th>
-               <th>نوع الشركة</th>
-               <th>البضائع</th>
-               <th>بلد التصدير</th>
-               <th>بلد المنشأ</th>
-               <th>تاريخ العملية</th>
-               <th>رقم الايصال</th>
-               <th>تاريخ الايصال</th>
-               <th>القيمة المدفوعة</th>
-               <th>القيمة (الكمية)</th>
-               <th>التكلفة</th>
-            </tr>
-         </thead>
-         <tbody>
-            {% for cert in certificates %}
-            <tr>
-               <td>{{ cert.id }}</td>
-               <td>{{ cert.Office.OfficeName }}</td>
-               <!-- <td>{{ cert.Office.BranchName }}</td> -->
-               <td>{{ cert.RegistrationNumber }}</td>
-               <td>{{ cert.CertificateNumber }}</td>
-               <td>{{ cert.Company.CompanyName }}</td>
-               <td>{{ cert.Company.CompanyAddress }}</td>
-               <td>{{ cert.Company.CompanyStatus }}</td>
-               <td>{{ cert.Company.CompanyType }}</td>
-               <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
-               <td>{{ cert.ExportCountry.CountryName }}</td>
-               <td>{{ cert.OriginCountry.CountryName }}</td>
-               <td>{{ cert.IssueDate }}</td>
-               <td>{{ cert.ReceiptNumber }}</td>
-               <td>{{ cert.ReceiptDate }}</td>
-               <td>{{ cert.PaymentAmount }}</td>
-               <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
-               <td>{{ cert.cost }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-               <td colspan="18">لا توجد بيانات</td>
-            </tr>
-            {% endfor %}
-         </tbody>
-      </table>
-      <div class="download-buttons">
-         <button>
-         <a href="{% url 'report_download' 'excel' %}?process_date_from={{ process_date_from }}&process_date_to={{ process_date_to }}&cargo={{ selected_cargo }}&export_country={{ selected_country }}">
-            تنزيل Excel
-         </a>
-      </button>
-      <button onclick="printTableAsPDF()">طباعة الشهادات PDF</button>
- 
-     </div>
+         <hr>
+         <h2>نتائج التقرير</h2>
+         <table id='certificatesTable'>
+            <thead>
+               <tr>
+                  <th>المعرف</th>
+                  <th>اسم المكتب</th>
+                  <!-- <th>اسم الفرع</th> -->
+                  <th>رقم السجل</th>
+                  <th>رقم الشهادة</th>
+                  <th>اسم الشركة</th>
+                  <th>عنوان الشركة</th>
+                  <th>حالة المنشأه</th>
+                  <th>نوع الشركة</th>
+                  <th>البضائع</th>
+                  <th>بلد التصدير</th>
+                  <th>بلد المنشأ</th>
+                  <th>تاريخ العملية</th>
+                  <th>رقم الايصال</th>
+                  <th>تاريخ الايصال</th>
+                  <th>القيمة المدفوعة</th>
+                  <th>القيمة (الكمية)</th>
+                  <th>التكلفة</th>
+               </tr>
+            </thead>
+            <tbody>
+               {% for cert in certificates %}
+               <tr>
+                  <td>{{ cert.id }}</td>
+                  <td>{{ cert.Office.OfficeName }}</td>
+                  <!-- <td>{{ cert.Office.BranchName }}</td> -->
+                  <td>{{ cert.RegistrationNumber }}</td>
+                  <td>{{ cert.CertificateNumber }}</td>
+                  <td>{{ cert.Company.CompanyName }}</td>
+                  <td>{{ cert.Company.CompanyAddress }}</td>
+                  <td>{{ cert.Company.CompanyStatus }}</td>
+                  <td>{{ cert.Company.CompanyType }}</td>
+                  <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
+                  <td>{{ cert.ExportCountry.CountryName }}</td>
+                  <td>{{ cert.OriginCountry.CountryName }}</td>
+                  <td>{{ cert.IssueDate }}</td>
+                  <td>{{ cert.ReceiptNumber }}</td>
+                  <td>{{ cert.ReceiptDate }}</td>
+                  <td>{{ cert.PaymentAmount }}</td>
+                  <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
+                  <td>{{ cert.cost }}</td>
+               </tr>
+               {% empty %}
+               <tr>
+                  <td colspan="18">لا توجد بيانات</td>
+               </tr>
+               {% endfor %}
+            </tbody>
+         </table>
+         <div class="download-buttons">
+            <button>
+               <a href="{% url 'report_download' 'excel' %}?process_date_from={{ process_date_from }}&process_date_to={{ process_date_to }}&cargo={{ selected_cargo }}&export_country={{ selected_country }}">
+                  تنزيل Excel
+               </a>
+            </button>
+            <button onclick="printTableAsPDF()">طباعة الشهادات PDF</button>
+         </div>
+      </div>
+   </div>
+  
+   <div class="footer">
+      <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
+         For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
+         Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
+         All activities on this platform are monitored and logged for security purposes.</p>
+         <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
+      </div>
+  
    <script>
       window.onload = function() {
          if (window.location.search) {
@@ -137,32 +156,33 @@
 
             let newParams = new URLSearchParams();
             keepParams.forEach(param => {
-                  if (params.has(param)) {
-                     newParams.set(param, params.get(param));
-                  }
+               if (params.has(param)) {
+                  newParams.set(param, params.get(param));
+               }
             });
 
             window.history.replaceState({}, document.title, window.location.pathname + '?' + newParams.toString());
          }
       };
+
       function toggleSidebar() {
-    var sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("active");
-}
+         var sidebar = document.getElementById("sidebar");
+         sidebar.classList.toggle("active");
+      }
 
-// Close the sidebar when clicking anywhere outside the sidebar and menu button
-document.addEventListener('click', function (e) {
-  const sidebar = document.getElementById('sidebar');
-  const menuBtn = document.querySelector('.menu-btn');
+      // Close the sidebar when clicking anywhere outside the sidebar and menu button
+      document.addEventListener('click', function (e) {
+         const sidebar = document.getElementById('sidebar');
+         const menuBtn = document.querySelector('.menu-btn');
 
-  // If sidebar is active and the click target is not inside the sidebar or the menu button, remove the active class.
-  if (sidebar.classList.contains('active') &&
-      !sidebar.contains(e.target) &&
-      !menuBtn.contains(e.target)) {
-    sidebar.classList.remove('active');
-  }
-});
-function printTableAsPDF() {
+         if (sidebar.classList.contains('active') &&
+             !sidebar.contains(e.target) &&
+             !menuBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+         }
+      });
+
+      function printTableAsPDF() {
     let printWindow = window.open('', '_blank');
     let table = document.getElementById('certificatesTable');
     if (!table) {
@@ -172,15 +192,80 @@ function printTableAsPDF() {
     
     let htmlContent = `
         <html>
-        <head>
-            <title>طباعة الشهادات</title>
-            <style>
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid black; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-            </style>
-        </head>
+        <head lang="ar" dir="rtl">
+    {% load static %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 2px solid black;
+            background-color: #f8f8f8;
+        }
+
+        .header .logo {
+            height: 50px; /* ضبط حجم الشعار */
+            margin-left: 10px; /* مسافة بين الشعار والنص */
+        }
+
+        .header .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .header .right {
+            display: flex;
+            align-items: center;
+            text-align: right;
+        }
+        .certificate-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+table { 
+   direction: rtl;
+   width: 100%; 
+   border-collapse: collapse; 
+   margin-top: 10px;
+
+}
+
+table th, table td { 
+
+    border: 1px solid #dee2e6; 
+    padding: 8px; 
+    text-align: right; 
+}
+
+/* جعل النص داخل خلايا الجدول أسود */
+td {
+    color: black;
+}
+th {
+   background-color : #6c8ba8;
+}
+
+    </style>
+</head>
         <body>
+          <div class="certificate-title">شهادة المصدر والمنشأ</div>
+         <div class="header">
+        <div class="left title">Alexandria Chamber of Commerce</div>
+        <div class="right">
+            <div class="title">الغرفة التجارية المصرية بالإسكندرية</div>
+            <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
+        </div>
+    </div>
             ${table.outerHTML}
             <script>
                 window.onload = function() {

@@ -8,12 +8,18 @@
   <link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
 <body>
-
   <nav class="navbar">
-    <div class="navbar-right">
-      <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
-      <label id="header">الغرفة التجارية</label>
+    <div class="navbar-right" dir="ltr">
+      <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label>
+      <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
+      <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
     </div>
+
+    <div class="navbar-left" dir="rtl">
+      <label id="headerLeft2"> Origin Certificate System | </label>
+      <label id="headerLeft"> Alexandria Chamber of Commerce </label>
+    </div>
+
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
   </nav>
 
@@ -27,157 +33,166 @@
     <a href="{% url 'report' %}">التقرير</a>
   </div>
 
-  <!-- Page Content -->
-  <div class="container">
-    <h1>شهادة المصدر و المنشأ</h1>
-    <div class="form-row">
-      <!-- Right Div -->
-      <div class="form-container right">
-        <form id="rightForm">
-          <div class="form-group">
-            <label for="companyStatus">حالة المنشأه:</label>
-            <select id="companyStatus" required>
-              <option value="مقيد">مقيد</option>
-              <option value="غير مقيد">غير مقيد</option>
-            </select>
-          </div>
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Page Content -->
+    <div class="container">
+      <h1>شهادة المصدر و المنشأ</h1>
+      <div class="form-row">
+        <!-- Right Div -->
+        <div class="form-container right">
+          <form id="rightForm">
+            <div class="form-group">
+              <label for="companyStatus">حالة المنشأه:</label>
+              <select id="companyStatus" required>
+                <option value="مقيد">مقيد</option>
+                <option value="غير مقيد">غير مقيد</option>
+              </select>
+            </div>
 
-          <div class="form-group">
-            <label for="office">اسم المكتب:</label>
-            <select id="office" required>
-              <option value="">اسم المكتب</option>
-              <option value="عام">عام</option>
-              <option value="شرق">شرق</option>
-              <option value="برج العرب">برج العرب</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="registrationNumber">رقم السجل:</label>
-            <input type="text" id="registrationNumber" placeholder="رقم السجل" required>
-          </div>          
-
-          <div class="form-group">
-            <label for="companyName">اسم الشركة:</label>
-            <input type="text" id="companyName" placeholder="اسم الشركه" required>
-          </div>
-
-          <div class="form-group">
-            <label for="companyAddress">عنوان الشركة:</label>
-            <input type="text" id="companyAddress" placeholder="عنوان الشركه" required>
-          </div>
-
-          <div class="form-group">
-            <label for="companyType">نوع الشركة:</label>
-            <select id="companyType" required>
-              <option value="" disabled selected>اختر نوع الشركه</option>
-              <option value="شركه">شركه</option>
-              <option value="فردي">فردي</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="certificateNumber">رقم الشهادة:</label>
-            <input type="text" id="certificateNumber" placeholder="رقم الشهاده" required>
-          </div>
-          <div class="form-group">
-            <label for="cargo">البضاعه:</label>
-            <select id="cargo" required>
-            </select>
-            <button type="button" class="add-button" onclick="openModal('cargo')">+</button>
-          </div>
+            <div class="form-group">
+              <label for="office">اسم المكتب:</label>
+              <select id="office" required>
+                <option value="">اسم المكتب</option>
+                <option value="عام">عام</option>
+                <option value="شرق">شرق</option>
+                <option value="برج العرب">برج العرب</option>
+              </select>
+            </div>
             
-          <div class="form-group">
-            <label for="exportCountry">بلد التصدير:</label>
-            <select id="exportCountry" required>
-            </select>
-            <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
-          </div>            
+            <div class="form-group">
+              <label for="registrationNumber">رقم السجل:</label>
+              <input type="text" id="registrationNumber" placeholder="رقم السجل" required>
+            </div>          
 
+            <div class="form-group">
+              <label for="companyName">اسم الشركة:</label>
+              <input type="text" id="companyName" placeholder="اسم الشركه" required>
+            </div>
 
-        </form>
+            <div class="form-group">
+              <label for="companyAddress">عنوان الشركة:</label>
+              <input type="text" id="companyAddress" placeholder="عنوان الشركه" required>
+            </div>
+
+            <div class="form-group">
+              <label for="companyType">نوع الشركة:</label>
+              <select id="companyType" required>
+                <option value="" disabled selected>اختر نوع الشركه</option>
+                <option value="شركه">شركه</option>
+                <option value="فردي">فردي</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="certificateNumber">رقم الشهادة:</label>
+              <input type="text" id="certificateNumber" placeholder="رقم الشهاده" required>
+            </div>
+            <div class="form-group">
+              <label for="cargo">البضاعه:</label>
+              <select id="cargo" required>
+              </select>
+              <button type="button" class="add-button" onclick="openModal('cargo')">+</button>
+            </div>
+              
+            <div class="form-group">
+              <label for="exportCountry">بلد التصدير:</label>
+              <select id="exportCountry" required>
+              </select>
+              <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
+            </div>            
+          </form>
+        </div>
+        
+        <!-- Left Div -->
+        <div class="form-container left">
+          <form id="leftForm">
+            <div class="form-group">
+              <label for="originCountry">بلد المنشأ:</label>
+              <select id="originCountry" required>
+                <option value="مصر" selected>مصر</option>         
+              </select>
+              <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
+            </div>
+
+            <div class="form-group">
+              <label for="processDate">تاريخ العمليه:</label>
+              <input type="date" id="processDate" placeholder="تاريخ العمليه" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="receiptNumber">رقم الايصال:</label>
+              <input type="text" id="receiptNumber" placeholder="رقم الايصال" required>
+            </div>
+
+            <div class="form-group">
+              <label for="receiptDate">تاريخ الايصال:</label>
+              <input type="date" id="receiptDate" placeholder="تاريخ الايصال" required>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentAmount">القيمه المدفوعه:</label>
+              <input type="number" id="paymentAmount" placeholder="القيمه المدفوعه" required>
+            </div>
+            
+            <!-- New inputs for Quantity -->
+            <div class="form-group">
+              <label for="quantity">القيمة (الكمية):</label>
+              <input type="number" step="0.01" id="quantity" placeholder="أدخل القيمة" required>
+            </div>
+            <div class="form-group">
+              <label for="quantity_unit">نوع الوحدة:</label>
+              <select id="quantity_unit" required>
+                <option value="" disabled selected>اختر نوع الوحدة</option>
+                <option value="طن">طن</option>
+                <option value="كجم">كجم</option>
+                <option value="وحده">وحده</option>
+              </select>
+            </div>
+            
+            <!-- New inputs for Cost using django-money -->
+            <div class="form-group">
+              <label for="cost_amount">التكلفة:</label>
+              <input type="number" step="0.01" id="cost_amount" placeholder="أدخل التكلفة" required>
+            </div>
+            <div class="form-group">
+              <label for="cost_currency">نوع العملة:</label>
+              <select id="cost_currency" required>
+                <option value="" disabled selected>اختر نوع العملة</option>
+                <option value="USD">دولار</option>
+                <option value="EUR">يورو</option>
+                <option value="EGP">جنيه مصري</option>
+              </select>
+            </div>
+          </form>
+        </div>
       </div>
       
-      <!-- Left Div -->
-      <div class="form-container left">
-        <form id="leftForm">
-          <div class="form-group">
-            <label for="originCountry">بلد المنشأ:</label>
-            <select id="originCountry" required>
-              <option value="مصر" selected>مصر</option>         
-            </select>
-            <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
-          </div>
+      <!-- Save Button -->
+      <div class="save-button-container">
+        <button type="submit" id="saveButton">حفظ</button>
+      </div>
 
-          <div class="form-group">
-            <label for="processDate">تاريخ العمليه:</label>
-            <input type="date" id="processDate" placeholder="تاريخ العمليه" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="receiptNumber">رقم الايصال:</label>
-            <input type="text" id="receiptNumber" placeholder="رقم الايصال" required>
-          </div>
-
-          <div class="form-group">
-            <label for="receiptDate">تاريخ الايصال:</label>
-            <input type="date" id="receiptDate" placeholder="تاريخ الايصال" required>
-          </div>
-
-          <div class="form-group">
-            <label for="paymentAmount">القيمه المدفوعه:</label>
-            <input type="number" id="paymentAmount" placeholder="القيمه المدفوعه" required>
-          </div>
-          
-          <!-- New inputs for Quantity -->
-          <div class="form-group">
-            <label for="quantity">القيمة (الكمية):</label>
-            <input type="number" step="0.01" id="quantity" placeholder="أدخل القيمة" required>
-          </div>
-          <div class="form-group">
-            <label for="quantity_unit">نوع الوحدة:</label>
-            <select id="quantity_unit" required>
-              <option value="" disabled selected>اختر نوع الوحدة</option>
-              <option value="tons">طن</option>
-              <option value="kg">كجم</option>
-              <option value="unit">وحده</option>
-            </select>
-          </div>
-          
-          <!-- New inputs for Cost using django-money -->
-          <div class="form-group">
-            <label for="cost_amount">التكلفة:</label>
-            <input type="number" step="0.01" id="cost_amount" placeholder="أدخل التكلفة" required>
-          </div>
-          <div class="form-group">
-            <label for="cost_currency">نوع العملة:</label>
-            <select id="cost_currency" required>
-              <option value="" disabled selected>اختر نوع العملة</option>
-              <option value="USD">دولار</option>
-              <option value="EUR">يورو</option>
-              <option value="EGP">جنيه مصري</option>
-            </select>
-          </div>
-        </form>
+      <!-- Modal for Adding New Items -->
+      <div id="modal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal()">&times;</span>
+          <label for="newItem">إضافه عنصر جديد:</label>
+          <input type="text" id="newItem" placeholder="ادخل العنصر الجديد">
+          <button type="button" onclick="addItem()">موافق</button>
+        </div>
+      </div>
+      <div id="newTableContainer">
       </div>
     </div>
-    
-    <!-- Save Button -->
-    <div class="save-button-container">
-      <button type="submit" id="saveButton">حفظ</button>
-    </div>
-
-    <!-- Modal for Adding New Items -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <label for="newItem">إضافه عنصر جديد:</label>
-        <input type="text" id="newItem" placeholder="ادخل العنصر الجديد">
-        <button type="button" onclick="addItem()">موافق</button>
-      </div>
-    </div>
-    <div id="newTableContainer">
-    </div>
+  </div>
+  
+  <div class="footer">
+    <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
+      For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
+      Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
+      All activities on this platform are monitored and logged for security purposes.</p>
+      <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
   </div>
   <script src="{% static 'script.js' %}"></script>
 </body>

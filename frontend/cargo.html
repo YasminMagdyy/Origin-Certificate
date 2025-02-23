@@ -9,9 +9,14 @@
 </head>
 <body>
   <nav class="navbar">
-    <div class="navbar-right">
-      <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
-      <label id="header">الغرفة التجارية</label>
+    <div class="navbar-right" dir="ltr">
+      <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label>
+      <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
+      <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
+    </div>
+    <div class="navbar-left" dir="rtl">
+      <label id="headerLeft2"> Origin Certificate System | </label>
+      <label id="headerLeft"> Alexandria Chamber of Commerce </label>
     </div>
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
   </nav>
@@ -26,37 +31,48 @@
     <a href="{% url 'report' %}">التقرير</a>
   </div>
   
-  <!-- Page Content -->
-  <div class="container">
-    <h1>البضاعه</h1>  
-  <!-- Table Div -->
-  <div class="table-container">
-    <table id="resultsTable">
-      <thead>
-        <tr>
-          <th>البضائع</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for cargo in cargos %}
-          <tr data-cargo-id="{{ cargo.id }}">
-            <td>{{ cargo.ExportedGoods }}</td>
-            <td>
-              <button onclick="editCargo({{ cargo.id }}, '{{ cargo.ExportedGoods }}')">تعديل</button>
-            <!--  <button onclick="deleteCargo({{ cargo.id }})">حذف</button> -->
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="2">لا توجد بيانات</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Page Content -->
+    <div class="container">
+      <h1>البضائع</h1>  
+      <!-- Table Div -->
+      <div class="table-container">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>البضائع</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cargo in cargos %}
+              <tr data-cargo-id="{{ cargo.id }}">
+                <td>{{ cargo.ExportedGoods }}</td>
+                <td>
+                  <button onclick="editCargo({{ cargo.id }}, '{{ cargo.ExportedGoods }}')">تعديل</button>
+                  <!--  <button onclick="deleteCargo({{ cargo.id }})">حذف</button> -->
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="2">لا توجد بيانات</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-</div>
-
+  
+  <div class="footer">
+    <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
+      For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
+      Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
+      All activities on this platform are monitored and logged for security purposes.</p>
+      <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
+    </div>
+  
   <script src="{% static 'script.js' %}"></script>
 </body>
 </html>

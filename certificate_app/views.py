@@ -96,7 +96,6 @@ def normalize_text(text):
         char for char in unicodedata.normalize('NFD', text)
         if unicodedata.category(char) != 'Mn'
     )
-
     return text
 
 @csrf_exempt
@@ -338,7 +337,7 @@ def update_certificate(request, certificate_id):
             
             # Validate and convert cost_value to Decimal
             try:
-                cost_value = Decimal(str(cost_value)) if cost_value else None
+                cost_value = Decimal(str(cost_value))
             except InvalidOperation:
                 return JsonResponse({'status': 'error', 'message': 'Invalid cost value'}, status=400)
             
@@ -357,7 +356,7 @@ def update_certificate(request, certificate_id):
             certificate.PaymentAmount = data['paymentAmount']
             certificate.quantity = quantity
             certificate.quantity_unit = quantity_unit
-            certificate.cost = Money(cost_value, cost_currency) if cost_value and cost_currency else None
+            certificate.cost = Money(cost_value, cost_currency)
             certificate.save()
             
             return JsonResponse({'status': 'success', 'certificateId': certificate.id}, status=200)
@@ -403,15 +402,15 @@ def filter_certificates(request):
             'export_country': cert.ExportCountry.CountryName,
             'issue_date': cert.IssueDate.strftime('%Y-%m-%d'),
             'receipt_number': cert.ReceiptNumber,
-            'receipt_date': cert.ReceiptDate.strftime('%Y-%m-%d') if cert.ReceiptDate else None,
-            'payment_amount': float(cert.PaymentAmount) if cert.PaymentAmount is not None else None,
+            'receipt_date': cert.ReceiptDate.strftime('%Y-%m-%d'),
+            'payment_amount': float(cert.PaymentAmount),
             # Include both display and raw values for the new fields:
             'quantity_display': cert.quantity_display,  # e.g. "10 kg"
-            'quantity': str(cert.quantity) if cert.quantity is not None else "",
+            'quantity': str(cert.quantity),
             'quantity_unit': cert.quantity_unit,
             'cost_display': str(cert.cost),  # e.g. "100.00 USD"
-            'cost_amount': str(cert.cost.amount) if cert.cost is not None else "",
-            'cost_currency': str(cert.cost.currency) if cert.cost is not None else ""
+            'cost_amount': str(cert.cost.amount),
+            'cost_currency': str(cert.cost.currency)
         })
 
     return JsonResponse({'certificates': results})
@@ -566,16 +565,19 @@ def download_report(request, file_format):
             str(cert.IssueDate),
             str(cert.ReceiptNumber),
             str(cert.ReceiptDate),
-            str(cert.PaymentAmount)
+            str(cert.PaymentAmount),
+            f"{cert.quantity} {cert.quantity_unit}" if cert.quantity and cert.quantity_unit else "",
+            f"{cert.cost}"
         ]
         for cert in certificates
     ]
 
     # العناوين الرئيسية
     headers = [
-        "المعرف", "اسم المكتب", "رقم السجل", "رقم الشهادة","اسم الشركة","عنوان الشركة","حالة الشركة","نوع الشركة",
+        "المعرف", "اسم المكتب", "رقم السجل", "رقم الشهادة", "اسم الشركة", "عنوان الشركة", "حالة الشركة", "نوع الشركة",
         "البضائع", "بلد المنشأ", "بلد التصدير", "تاريخ العملية",
-        "رقم الايصال", "تاريخ الايصال", "القيمة المدفوعة"
+        "رقم الايصال", "تاريخ الايصال", "القيمة المدفوعة",
+        "القيمة (الكمية)", "التكلفة"
     ]
 
     # إذا كان المطلوب Excel

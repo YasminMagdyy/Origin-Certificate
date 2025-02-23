@@ -4,17 +4,17 @@ from djmoney.money import Money
 
 # Predefined choices for quantity unit
 QUANTITY_UNIT_CHOICES = [
-    ('tons', 'Tons'),
-    ('kg', 'Kg'),
-    ('unit', 'Unit'),
+    ('طن', 'طن'),
+    ('كجم', 'كجم'),
+    ('وحده', 'وحده'),
 ]
 
 class Office(models.Model):
     OfficeName = models.CharField(max_length=100, blank=True, null=True)
-    BranchName = models.CharField(max_length=100, blank=True, null=True)
+    # BranchName = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.OfficeName} - {self.BranchName}"
+        return f"{self.OfficeName}"
 
 class Company(models.Model):
     CompanyName = models.CharField(max_length=100)
