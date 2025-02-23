@@ -2,5 +2,5 @@ git clone
 Open VsCode and at the terminal write this : python -m venv venv
 Activate it by write : venv\Scripts\activate
 if it doesn't work open powershell and write this : Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine ,then try to activate it again.
-pip install requirements.txt
+pip install -r requirements.txt
 python manage.py runserver
