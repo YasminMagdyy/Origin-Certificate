@@ -627,14 +627,14 @@ function openEditModal(rowData) {
   document.querySelector('#editForm #originCountry').value = rowData.origin_country;
   document.querySelector('#editForm #processDate').value = rowData.issue_date;
   document.querySelector('#editForm #receiptNumber').value = rowData.receipt_number;
-  document.querySelector('#editForm #receiptDate').value = rowData.receipt_date || '';
-  document.querySelector('#editForm #paymentAmount').value = rowData.payment_amount || '';
+  document.querySelector('#editForm #receiptDate').value = rowData.receipt_date;
+  document.querySelector('#editForm #paymentAmount').value = rowData.payment_amount;
 
   // Populate the new fields using raw values from the JSON response
-  document.querySelector('#editForm #quantity').value = rowData.quantity || '';
-  document.querySelector('#editForm #quantity_unit').value = rowData.quantity_unit || 'kg';
+  document.querySelector('#editForm #quantity').value = rowData.quantity;
+  document.querySelector('#editForm #quantity_unit').value = rowData.quantity_unit;
   document.querySelector('#editForm #cost_amount').value = rowData.cost_amount || '';
-  document.querySelector('#editForm #cost_currency').value = rowData.cost_currency || 'USD';
+  document.querySelector('#editForm #cost_currency').value = rowData.cost_currency;
 
   // Disable office and registrationNumber fields if company status is "غير مقيد"
   if (rowData.company_status === 'غير مقيد') {

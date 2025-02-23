@@ -3,11 +3,6 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <style>
-      body {
-          font-family: 'Arial', sans-serif;
-      }
-   </style>
    <title>تقرير الشهادات</title>
    {% load static %}
    <link rel="stylesheet" href="{% static 'styles.css' %}">
@@ -77,58 +72,60 @@
 
          <hr>
          <h2>نتائج التقرير</h2>
-         <table id='certificatesTable'>
-            <thead>
-               <tr>
-                  <th>المعرف</th>
-                  <th>اسم المكتب</th>
-                  <!-- <th>اسم الفرع</th> -->
-                  <th>رقم السجل</th>
-                  <th>رقم الشهادة</th>
-                  <th>اسم الشركة</th>
-                  <th>عنوان الشركة</th>
-                  <th>حالة المنشأه</th>
-                  <th>نوع الشركة</th>
-                  <th>البضائع</th>
-                  <th>بلد التصدير</th>
-                  <th>بلد المنشأ</th>
-                  <th>تاريخ العملية</th>
-                  <th>رقم الايصال</th>
-                  <th>تاريخ الايصال</th>
-                  <th>القيمة المدفوعة</th>
-                  <th>القيمة (الكمية)</th>
-                  <th>التكلفة</th>
-               </tr>
-            </thead>
-            <tbody>
-               {% for cert in certificates %}
-               <tr>
-                  <td>{{ cert.id }}</td>
-                  <td>{{ cert.Office.OfficeName }}</td>
-                  <!-- <td>{{ cert.Office.BranchName }}</td> -->
-                  <td>{{ cert.RegistrationNumber }}</td>
-                  <td>{{ cert.CertificateNumber }}</td>
-                  <td>{{ cert.Company.CompanyName }}</td>
-                  <td>{{ cert.Company.CompanyAddress }}</td>
-                  <td>{{ cert.Company.CompanyStatus }}</td>
-                  <td>{{ cert.Company.CompanyType }}</td>
-                  <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
-                  <td>{{ cert.ExportCountry.CountryName }}</td>
-                  <td>{{ cert.OriginCountry.CountryName }}</td>
-                  <td>{{ cert.IssueDate }}</td>
-                  <td>{{ cert.ReceiptNumber }}</td>
-                  <td>{{ cert.ReceiptDate }}</td>
-                  <td>{{ cert.PaymentAmount }}</td>
-                  <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
-                  <td>{{ cert.cost }}</td>
-               </tr>
-               {% empty %}
-               <tr>
-                  <td colspan="18">لا توجد بيانات</td>
-               </tr>
-               {% endfor %}
-            </tbody>
-         </table>
+         <div class="table-container">
+            <table id='certificatesTable'>
+               <thead>
+                  <tr>
+                     <th>المعرف</th>
+                     <th>اسم المكتب</th>
+                     <!-- <th>اسم الفرع</th> -->
+                     <th>رقم السجل</th>
+                     <th>رقم الشهادة</th>
+                     <th>اسم الشركة</th>
+                     <th>عنوان الشركة</th>
+                     <th>حالة المنشأه</th>
+                     <th>نوع الشركة</th>
+                     <th>البضائع</th>
+                     <th>بلد التصدير</th>
+                     <th>بلد المنشأ</th>
+                     <th>تاريخ العملية</th>
+                     <th>رقم الايصال</th>
+                     <th>تاريخ الايصال</th>
+                     <th>القيمة المدفوعة</th>
+                     <th>القيمة (الكمية)</th>
+                     <th>التكلفة</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for cert in certificates %}
+                  <tr>
+                     <td>{{ cert.id }}</td>
+                     <td>{{ cert.Office.OfficeName }}</td>
+                     <!-- <td>{{ cert.Office.BranchName }}</td> -->
+                     <td>{{ cert.RegistrationNumber }}</td>
+                     <td>{{ cert.CertificateNumber }}</td>
+                     <td>{{ cert.Company.CompanyName }}</td>
+                     <td>{{ cert.Company.CompanyAddress }}</td>
+                     <td>{{ cert.Company.CompanyStatus }}</td>
+                     <td>{{ cert.Company.CompanyType }}</td>
+                     <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
+                     <td>{{ cert.ExportCountry.CountryName }}</td>
+                     <td>{{ cert.OriginCountry.CountryName }}</td>
+                     <td>{{ cert.IssueDate }}</td>
+                     <td>{{ cert.ReceiptNumber }}</td>
+                     <td>{{ cert.ReceiptDate }}</td>
+                     <td>{{ cert.PaymentAmount }}</td>
+                     <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
+                     <td>{{ cert.cost }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                     <td colspan="18">لا توجد بيانات</td>
+                  </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+         </div>
          <div class="download-buttons">
             <button>
                <a href="{% url 'report_download' 'excel' %}?process_date_from={{ process_date_from }}&process_date_to={{ process_date_to }}&cargo={{ selected_cargo }}&export_country={{ selected_country }}">
@@ -193,79 +190,103 @@
     let htmlContent = `
         <html>
         <head lang="ar" dir="rtl">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     {% load static %}
-    <style>
+      <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
             text-align: center;
         }
 
+        .container {
+            max-width: 1000px; /* تكبير عرض الحاوية */
+            margin: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* تنسيق الهيدر */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            border-bottom: 2px solid black;
-            background-color: #f8f8f8;
+            padding: 10px 0; /* تقليل المسافات العلوية والسفلية */
         }
 
-        .header .logo {
-            height: 50px; /* ضبط حجم الشعار */
-            margin-left: 10px; /* مسافة بين الشعار والنص */
-        }
-
-        .header .title {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .header .right {
+        .header-item {
             display: flex;
             align-items: center;
-            text-align: right;
+            gap: 5px; /* تقليل المسافة بين النص والصورة */
+            font-size: 18px;
+            font-weight: bold;
+            color: #1866ae;
         }
+
+        .header img {
+            height: 45px; 
+        }
+
         .certificate-title {
             font-size: 24px;
             font-weight: bold;
-            margin: 20px 0;
+            color: #1866ae;
+            margin: 10px 0; 
         }
 
-table { 
-   direction: rtl;
-   width: 100%; 
-   border-collapse: collapse; 
-   margin-top: 10px;
+        table {
+            width: 95%; 
+            margin: 10px auto; 
+            border-collapse: collapse;
+            background: white;
+            direction : rtl;
+        }
 
-}
+        table th, table td {
+            border: 1px solid #dee2e6;
+            padding: 14px; 
+            text-align: center;
+            font-size: 16px;
+            min-width: 100px; 
+            white-space: nowrap; 
+        }
 
-table th, table td { 
+        th {
+            background-color: #1866ae;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
 
-    border: 1px solid #dee2e6; 
-    padding: 8px; 
-    text-align: right; 
-}
+        }
+        td {
+            color: black;
+        }
 
-/* جعل النص داخل خلايا الجدول أسود */
-td {
-    color: black;
-}
-th {
-   background-color : #6c8ba8;
-}
-
+        .signature {
+            font-size: 20px;
+        }
     </style>
 </head>
         <body>
           <div class="certificate-title">شهادة المصدر والمنشأ</div>
-         <div class="header">
-        <div class="left title">Alexandria Chamber of Commerce</div>
-        <div class="right">
-            <div class="title">الغرفة التجارية المصرية بالإسكندرية</div>
-            <img src="{% static 'Alexandra_CC_Logo.jpg' %}" alt="Company Logo" class="logo">
+           <div class="header">
+        <div class="header-item">
+            <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
+            <span>الغرفة التجارية المصرية بالإسكندرية</span>
+        </div>
+        <div class="header-item">
+            <span>Alexandria Chamber of Commerce</span>
+            <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
         </div>
     </div>
+
             ${table.outerHTML}
             <script>
                 window.onload = function() {

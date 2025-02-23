@@ -93,6 +93,7 @@ html, body {
   color: white;
   transition: left 0.3s ease-in-out;
   padding-top: 50px;
+  z-index: 1000;
 }
 
 .sidebar a {
@@ -214,11 +215,12 @@ button:hover {
 
 /* Table Styling */
 .table-container {
-  display: block;         /* Ensures the container behaves as a block-level element */
-  max-width: 100%;        /* Prevents the container from exceeding its parent’s width */
-  overflow-x: auto;       /* Adds a horizontal scrollbar when content overflows */
-  overflow-y: hidden;      /* Hides vertical overflow if not needed */
-  margin-top: 15px;        /* Adjust as needed */
+  display: block;         
+  max-width: 100%;        
+  overflow-x: auto;      
+  margin-top: 15px;        
+  position: relative;
+  z-index: 1;
 }
 
 table {
@@ -229,16 +231,21 @@ table {
 
 table th,
 table td {
-  padding: 8px; /* Reduced padding */
+  padding: 8px; 
   border: 1px solid #dee2e6;
   text-align: center;
-  FONT-SIZE: 8PX;
+  FONT-SIZE: 13PX;
+  min-width: 100px; 
+  white-space: nowrap; /* Keep text in one line */
 }
 
 table th {
   background-color: #6c8ba8;
   color: white;
   font-size: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 table tr:nth-child(even) {
@@ -406,11 +413,11 @@ a{
 }
 .footer {
   width: 96%;
-  background-color: #b3c2d5;
+  background-color: #c6d0de;
   color: white;
   font-size: 15px;
   padding: 2%;
-  height: 100px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between; /* Distributes space between text and image */
@@ -425,4 +432,5 @@ a{
 .footer-img {
   height: 80%;  /* Adjust as needed to fit the footer height */
   margin-left: 10px;
+  margin-right: 10px;
 }
