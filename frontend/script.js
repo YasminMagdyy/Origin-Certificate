@@ -199,6 +199,19 @@ document.getElementById('companyStatus').addEventListener('change', function() {
 
 // Save/Update Certificate
 document.getElementById('saveButton').addEventListener('click', function () {
+
+  const rightForm = document.getElementById('rightForm');
+  const leftForm = document.getElementById('leftForm');
+
+  // Check if both forms are valid
+  if (!rightForm.checkValidity() || !leftForm.checkValidity()) {
+    // Optionally display the validation messages
+    rightForm.reportValidity();
+    leftForm.reportValidity();
+    // Prevent further processing if invalid
+    return;
+  }
+
   // Determine mode; default is "save"
   mode = mode || "save";
 
@@ -473,8 +486,8 @@ function searchCertificates() {
         data.certificates.forEach(cert => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${cert.office_name || 'N/A'}</td>
-            <td>${cert.registration_number || 'N/A'}</td>
+            <td>${cert.office_name}</td>
+            <td>${cert.registration_number}</td>
             <td>${cert.certificate_number}</td>
             <td>${cert.company_name}</td>
             <td>${cert.company_address}</td>
@@ -484,11 +497,11 @@ function searchCertificates() {
             <td>${cert.export_country}</td>
             <td>${cert.origin_country}</td>
             <td>${cert.issue_date}</td>
-            <td>${cert.quantity_display || 'N/A'}</td>
-            <td>${cert.cost_display || 'N/A'}</td>
+            <td>${cert.quantity_display}</td>
+            <td>${cert.cost_display}</td>
             <td>${cert.receipt_number}</td>
-            <td>${cert.receipt_date || ''}</td>
-            <td>${cert.payment_amount || ''}</td>
+            <td>${cert.receipt_date}</td>
+            <td>${cert.payment_amount}</td>
             <td><button onclick='openEditModal(${JSON.stringify(cert)})'>تعديل</button></td>
             <td><button onclick="deleteCertificate(${cert.id})">حذف</button></td>
           `;
@@ -643,6 +656,12 @@ function closeEditModal() {
 
 // Submit Edit Modal
 function submitEditModal() {
+  const editForm = document.getElementById('editForm');
+  if (!editForm.checkValidity()) {
+    // Show browser validation messages if the form is invalid.
+    editForm.reportValidity();
+    return; // Stop processing if the form is not valid.
+  }
   const certificateId = document.getElementById('certificateId').value;
   const office = document.querySelector('#editForm #office').value;
   const companyName = document.querySelector('#editForm #companyName').value;
