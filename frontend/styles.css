@@ -232,18 +232,15 @@ table td {
   padding: 8px; 
   border: 1px solid #dee2e6;
   text-align: center;
-  FONT-SIZE: 13PX;
-  min-width: 100px; 
-  /* white-space: nowrap; */
+  FONT-SIZE: 12PX;
+  max-width: 100x;
 }
 
 table th {
   background-color: #6c8ba8;
   color: white;
   font-size: 14px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  white-space: nowrap;
 }
 
 table tr:nth-child(even) {

@@ -14,14 +14,12 @@
          <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
          <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
       </div>
-  
       <div class="navbar-left" dir="rtl">
          <label id="headerLeft2"> Origin Certificate System | </label>
          <label id="headerLeft"> Alexandria Chamber of Commerce </label>
       </div>
-  
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-    </nav>
+   </nav>
   
    <div class="sidebar" id="sidebar">
       <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
@@ -32,7 +30,6 @@
       <a href="{% url 'report' %}">تقرير</a>
    </div>
 
-   <!-- Content Wrapper -->
    <div class="content-wrapper">
       <div class="container">
          <h1>تقرير الشهادات</h1>
@@ -73,12 +70,11 @@
          <hr>
          <h2>نتائج التقرير</h2>
          <div class="table-container">
-            <table id='certificatesTable'>
+            <table id="certificatesTable">
                <thead>
                   <tr>
                      <th>المعرف</th>
                      <th>اسم المكتب</th>
-                     <!-- <th>اسم الفرع</th> -->
                      <th>رقم السجل</th>
                      <th>رقم الشهادة</th>
                      <th>اسم الشركة</th>
@@ -101,7 +97,6 @@
                   <tr>
                      <td>{{ cert.id }}</td>
                      <td>{{ cert.Office.OfficeName }}</td>
-                     <!-- <td>{{ cert.Office.BranchName }}</td> -->
                      <td>{{ cert.RegistrationNumber }}</td>
                      <td>{{ cert.CertificateNumber }}</td>
                      <td>{{ cert.Company.CompanyName }}</td>
@@ -113,7 +108,7 @@
                      <td>{{ cert.OriginCountry.CountryName }}</td>
                      <td class="date-column">{{ cert.IssueDate }}</td>
                      <td>{{ cert.ReceiptNumber }}</td>
-                     <td><td class="date-column">{{ cert.ReceiptDate }}</td>
+                     <td class="date-column">{{ cert.ReceiptDate }}</td>
                      <td>{{ cert.PaymentAmount }}</td>
                      <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
                      <td>{{ cert.cost }}</td>
@@ -124,6 +119,16 @@
                   </tr>
                   {% endfor %}
                </tbody>
+               <tfoot>
+                  <tr>
+                     <td colspan="16" style="text-align: right; font-weight: bold;">إجمالي التكلفة</td>
+                     <td>
+                        {% for total in currency_totals %}
+                           {{ total.total_cost }} {{ total.cost_currency }}<br>
+                        {% endfor %}
+                     </td>
+                  </tr>
+               </tfoot>
             </table>
             <p id="certificateCount"></p>
          </div>
@@ -139,45 +144,37 @@
    </div>
   
    <div class="footer">
-      <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
+      <p>
+         This website and system have been developed by the Alexandria Chamber of Commerce IT Department.
          For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
-         Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
-         All activities on this platform are monitored and logged for security purposes.</p>
-         <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
-      </div>
+         Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action.
+         All activities on this platform are monitored and logged for security purposes.
+      </p>
+      <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
+   </div>
   
-      <script>
-         
-         function updateCertificateCount() {
-         // Get the table and all rows in the tbody
+   <script>
+      function updateCertificateCount() {
          const table = document.getElementById("certificatesTable");
          const rows = table.querySelectorAll("tbody tr");
-         
-         // Check if the only row is the "no data" row (it has a colspan attribute)
          let count = rows.length;
          if (rows.length === 1 && rows[0].querySelector("td[colspan]")) {
             count = 0;
          }
-         
-         // Display the count in the counter element
          document.getElementById("certificateCount").textContent = "عدد الشهادات: " + count;
-         }
-
-         // Run the function when the page loads
-         document.addEventListener("DOMContentLoaded", updateCertificateCount);
-
-               window.onload = function() {
+      }
+      document.addEventListener("DOMContentLoaded", updateCertificateCount);
+      
+      window.onload = function() {
          if (window.location.search) {
             let params = new URLSearchParams(window.location.search);
             let keepParams = ['process_date_from', 'process_date_to', 'cargo', 'export_country'];
-
             let newParams = new URLSearchParams();
             keepParams.forEach(param => {
                if (params.has(param)) {
                   newParams.set(param, params.get(param));
                }
             });
-
             window.history.replaceState({}, document.title, window.location.pathname + '?' + newParams.toString());
          }
       };
@@ -187,129 +184,71 @@
          sidebar.classList.toggle("active");
       }
 
-      // Close the sidebar when clicking anywhere outside the sidebar and menu button
       document.addEventListener('click', function (e) {
          const sidebar = document.getElementById('sidebar');
          const menuBtn = document.querySelector('.menu-btn');
-
          if (sidebar.classList.contains('active') &&
              !sidebar.contains(e.target) &&
              !menuBtn.contains(e.target)) {
             sidebar.classList.remove('active');
          }
       });
-         function printTableAsPDF() {
-             let printWindow = window.open('', '_blank');
-             let table = document.getElementById('certificatesTable');
-             if (!table) {
-                 alert('الجدول غير موجود!');
-                 return;
-             }
-             
-             let htmlContent = `
-                 <html lang="ar" dir="rtl">
-                 <head>
-                   <meta charset="UTF-8">
-                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                   <title>طباعة الشهادات</title>
-                   <style>
-                     /* Set the page size to A4 with custom margins */
-                     @page {
-                     size: A4 landscape;
-                     margin: 20mm;
-                     }
-                     body {
-                       font-family: Arial, sans-serif;
-                       margin: 0;
-                       padding: 10mm; /* internal padding for the document */
-                       background-color: #f4f6f9;
-                       text-align: center;
-                     }
-                     .container {
-                       max-width: 1000px;
-                       margin: auto;
-                       background: white;
-                       padding: 15px;
-                       border-radius: 10px;
-                       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                     }
-                     /* Header styling */
-                     .header {
-                       display: flex;
-                       justify-content: space-between;
-                       align-items: center;
-                       padding: 10px 0;
-                     }
-                     .header-item {
-                       display: flex;
-                       align-items: center;
-                       gap: 5px;
-                       font-size: 18px;
-                       font-weight: bold;
-                       color: #1866ae;
-                     }
-                     .header img {
-                       height: 45px;
-                     }
-                     .certificate-title {
-                       font-size: 24px;
-                       font-weight: bold;
-                       color: #1866ae;
-                       margin: 10px 0;
-                     }
-                     table {
-                       width: auto; 
-                       margin: 20px auto; 
-                       border-collapse: collapse;
-                       background: white;
-                       direction: rtl;
-                     }
-                     table th, table td {
-                       border: 1px solid #dee2e6;
-                        padding: 6px;
-                        font-size: 10px;
-                       text-align: center;
-                     }
-                     table th {
-                       background-color: #1866ae;
-                       color: white;
-                     }
-                     table td {
-                       color: black;
-                     }
-                     .signature {
-                       font-size: 20px;
-                     }
-                   </style>
-                 </head>
-                 <body>
-                   <div class="certificate-title">شهادة المصدر والمنشأ</div>
-                   <div class="header">
-                     <div class="header-item">
-                       <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
-                       <span>الغرفة التجارية المصرية بالإسكندرية</span>
-                     </div>
-                     <div class="header-item">
-                       <span>Alexandria Chamber of Commerce</span>
-                       <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
-                     </div>
-                   </div>
-                   ${table.outerHTML}
-                   <script>
-                       window.onload = function() {
-                           window.print();
-                           window.close();
-                       }
-                   <\/script>
-                 </body>
-                 </html>
-             `;
-             
-             printWindow.document.open();
-             printWindow.document.write(htmlContent);
-             printWindow.document.close();
+
+      function printTableAsPDF() {
+         let printWindow = window.open('', '_blank');
+         let table = document.getElementById('certificatesTable');
+         if (!table) {
+            alert('الجدول غير موجود!');
+            return;
          }
-         </script>
-         
+         let htmlContent = `
+             <html lang="ar" dir="rtl">
+             <head>
+               <meta charset="UTF-8">
+               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+               <title>طباعة الشهادات</title>
+               <style>
+                 @page { size: A4 landscape; margin: 20mm; }
+                 body { font-family: Arial, sans-serif; margin: 0; padding: 10mm; background-color: #f4f6f9; text-align: center; }
+                 .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+                 .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+                 .header-item { display: flex; align-items: center; gap: 5px; font-size: 18px; font-weight: bold; color: #1866ae; }
+                 .header img { height: 45px; }
+                 .certificate-title { font-size: 24px; font-weight: bold; color: #1866ae; margin: 10px 0; }
+                 table { width: auto; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
+                 table th, table td { border: 1px solid #dee2e6; padding: 6px; font-size: 10px; text-align: center; }
+                 table th { background-color: #1866ae; color: white; white-space: nowrap; }
+                 table td { color: black; }
+                 .date-column { white-space: nowrap; }
+                 .signature { font-size: 20px; }
+               </style>
+             </head>
+             <body>
+               <div class="certificate-title">شهادة المصدر والمنشأ</div>
+               <div class="header">
+                 <div class="header-item">
+                   <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
+                   <span>الغرفة التجارية المصرية بالإسكندرية</span>
+                 </div>
+                 <div class="header-item">
+                   <span>Alexandria Chamber of Commerce</span>
+                   <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
+                 </div>
+               </div>
+               ${table.outerHTML}
+               <script>
+                   window.onload = function() {
+                       window.print();
+                       window.close();
+                   }
+               <\/script>
+             </body>
+             </html>
+         `;
+         printWindow.document.open();
+         printWindow.document.write(htmlContent);
+         printWindow.document.close();
+      }
+   </script>
 </body>
 </html>

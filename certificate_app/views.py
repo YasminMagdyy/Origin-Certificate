@@ -49,10 +49,6 @@ def remove_all_diacritics(text):
     normalized = unicodedata.normalize('NFD', text)
     return ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
 
-import unicodedata
-import re
-import string
-
 def normalize_text(text):
     """
     Normalize the input text by:
@@ -497,6 +493,14 @@ def get_country_options(request):
     countries = Country.objects.all().values('id', 'CountryName')
     return JsonResponse({'countries': list(countries)})
 
+from django.shortcuts import render, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.db.models import Sum
+from .models import Certificate, Cargo, Country
+import pandas as pd
+import io
+
 @csrf_exempt
 def report_view(request):
     # Retrieve filtering criteria from GET parameters
@@ -516,9 +520,11 @@ def report_view(request):
             certificates = certificates.filter(IssueDate__lte=process_date_to)
         if cargo_name:
             certificates = certificates.filter(ExportedGoods_id=cargo_name)
-
         if export_country_name:
             certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
+
+    # Group the certificates by currency and calculate the sum of cost for each group
+    currency_totals = certificates.values('cost_currency').annotate(total_cost=Sum('cost'))
 
     context = {
         'certificates': certificates,
@@ -528,16 +534,17 @@ def report_view(request):
         'selected_country': export_country_name,
         'cargos': Cargo.objects.all(),
         'countries': Country.objects.all(),
+        'currency_totals': currency_totals,
     }
     return render(request, 'report.html', context)
-    
+
 def download_report(request, file_format):
     process_date_from = request.GET.get('process_date_from', '')
     process_date_to = request.GET.get('process_date_to', '')
     cargo_name = request.GET.get('cargo', '')
     export_country_name = request.GET.get('export_country', '')
 
-    # تصفية البيانات بناءً على المعايير
+    # Filter certificates based on criteria
     certificates = Certificate.objects.all()
     if process_date_from:
         certificates = certificates.filter(IssueDate__gte=process_date_from)
@@ -548,7 +555,7 @@ def download_report(request, file_format):
     if export_country_name:
         certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
 
-    # إنشاء البيانات كمصفوفة
+    # Prepare data as a list of lists
     data = [
         [
             str(cert.id),
@@ -572,7 +579,7 @@ def download_report(request, file_format):
         for cert in certificates
     ]
 
-    # العناوين الرئيسية
+    # Column headers
     headers = [
         "المعرف", "اسم المكتب", "رقم السجل", "رقم الشهادة", "اسم الشركة", "عنوان الشركة", "حالة الشركة", "نوع الشركة",
         "البضائع", "بلد المنشأ", "بلد التصدير", "تاريخ العملية",
@@ -580,7 +587,7 @@ def download_report(request, file_format):
         "القيمة (الكمية)", "التكلفة"
     ]
 
-    # إذا كان المطلوب Excel
+    # Prepare Excel response
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
@@ -593,7 +600,4 @@ def download_report(request, file_format):
         output.seek(0)
         response.write(output.read())
     return response
-
-    # في حالة وجود خطأ في التنسيق
-    return HttpResponse("Invalid file format", status=400)
 
