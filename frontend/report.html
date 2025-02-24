@@ -21,7 +21,7 @@
       </div>
   
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-   </nav>
+    </nav>
   
    <div class="sidebar" id="sidebar">
       <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
@@ -98,10 +98,9 @@
                </thead>
                <tbody>
                   {% for cert in certificates %}
-                  <tr>
+                  <tr class="data-row">
                      <td>{{ cert.id }}</td>
                      <td>{{ cert.Office.OfficeName }}</td>
-                     <!-- <td>{{ cert.Office.BranchName }}</td> -->
                      <td>{{ cert.RegistrationNumber }}</td>
                      <td>{{ cert.CertificateNumber }}</td>
                      <td>{{ cert.Company.CompanyName }}</td>
@@ -119,11 +118,40 @@
                      <td>{{ cert.cost }}</td>
                   </tr>
                   {% empty %}
-                  <tr>
+                  <tr class="no-data">
                      <td colspan="18">لا توجد بيانات</td>
                   </tr>
                   {% endfor %}
                </tbody>
+               <tfoot>
+                  <!-- Title Row -->
+                  <tr>
+                     <td colspan="17" style="text-align: center; font-weight: bold; background: #eee;">
+                        إجمالي التكلفة حسب العملة
+                     </td>
+                  </tr>
+                  <!-- Nested table for currency totals in separate cells -->
+                  <tr>
+                     <td colspan="17">
+                        <table style="width:100%; border-collapse:collapse;">
+                           <tr>
+                              {% for total in currency_totals %}
+                              <th style="border: 1px solid #dee2e6; padding: 4px; text-align: center; background-color: #1866ae; color: #fff;">
+                                 {{ total.cost_currency }}
+                              </th>
+                              {% endfor %}
+                           </tr>
+                           <tr>
+                              {% for total in currency_totals %}
+                              <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center; font-weight: bold;">
+                                 {{ total.total_cost }}
+                              </td>
+                              {% endfor %}
+                           </tr>
+                        </table>
+                     </td>
+                  </tr>
+               </tfoot>
             </table>
             <p id="certificateCount"></p>
          </div>
@@ -150,23 +178,13 @@
   
    <script>
       function updateCertificateCount() {
-         // الحصول على الجدول وكل الصفوف داخل tbody
-         const table = document.getElementById("certificatesTable");
-         const rows = table.querySelectorAll("tbody tr");
-         
-         // التحقق إذا كان الصف الوحيد هو صف "لا توجد بيانات"
-         let count = rows.length;
-         if (rows.length === 1 && rows[0].querySelector("td[colspan]")) {
-            count = 0;
-         }
-         
-         // عرض عدد الشهادات
+         // Only count rows with the "data-row" class
+         const rows = document.querySelectorAll("#certificatesTable tbody tr.data-row");
+         const count = rows.length;
          document.getElementById("certificateCount").textContent = "عدد الشهادات: " + count;
       }
-
-      // تنفيذ الدالة عند تحميل الصفحة
       document.addEventListener("DOMContentLoaded", updateCertificateCount);
-
+      
       // إزالة معطيات الاستعلام من عنوان الصفحة عند عمل ريفريش
       window.onload = function() {
          window.history.replaceState({}, document.title, window.location.pathname);
@@ -177,18 +195,17 @@
          sidebar.classList.toggle("active");
       }
 
-      // إغلاق الشريط الجانبي عند النقر خارج منطقة الشريط وزر القائمة
+      // Close the sidebar when clicking anywhere outside the sidebar and menu button
       document.addEventListener('click', function (e) {
          const sidebar = document.getElementById('sidebar');
          const menuBtn = document.querySelector('.menu-btn');
-
          if (sidebar.classList.contains('active') &&
              !sidebar.contains(e.target) &&
              !menuBtn.contains(e.target)) {
             sidebar.classList.remove('active');
          }
       });
-      
+
       function printTableAsPDF() {
          let printWindow = window.open('', '_blank');
          let table = document.getElementById('certificatesTable');
@@ -196,106 +213,49 @@
             alert('الجدول غير موجود!');
             return;
          }
-         
          let htmlContent = `
-            <html lang="ar" dir="rtl">
-            <head>
+             <html lang="ar" dir="rtl">
+             <head>
                <meta charset="UTF-8">
                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                <title>طباعة الشهادات</title>
                <style>
-                  /* تحديد حجم الصفحة A4 مع هوامش مخصصة */
-                  @page {
-                     size: A4 landscape;
-                     margin: 20mm;
-                  }
-                  body {
-                     font-family: Arial, sans-serif;
-                     margin: 0;
-                     padding: 10mm;
-                     background-color: #f4f6f9;
-                     text-align: center;
-                  }
-                  .container {
-                     max-width: 1000px;
-                     margin: auto;
-                     background: white;
-                     padding: 15px;
-                     border-radius: 10px;
-                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                  }
-                  /* تنسيق الهيدر */
-                  .header {
-                     display: flex;
-                     justify-content: space-between;
-                     align-items: center;
-                     padding: 10px 0;
-                  }
-                  .header-item {
-                     display: flex;
-                     align-items: center;
-                     gap: 5px;
-                     font-size: 18px;
-                     font-weight: bold;
-                     color: #1866ae;
-                  }
-                  .header img {
-                     height: 45px;
-                  }
-                  .certificate-title {
-                     font-size: 24px;
-                     font-weight: bold;
-                     color: #1866ae;
-                     margin: 10px 0;
-                  }
-                  table {
-                     width: auto; 
-                     margin: 20px auto; 
-                     border-collapse: collapse;
-                     background: white;
-                     direction: rtl;
-                  }
-                  table th, table td {
-                     border: 1px solid #dee2e6;
-                     padding: 6px;
-                     font-size: 10px;
-                     text-align: center;
-                  }
-                  table th {
-                     background-color: #1866ae;
-                     color: white;
-                  }
-                  table td {
-                     color: black;
-                  }
-                  .signature {
-                     font-size: 20px;
-                  }
+                     @page { size: A4 landscape; margin: 20mm; }
+                     body { font-family: Arial, sans-serif; margin: 0; padding: 10mm; background-color: #f4f6f9; text-align: center; }
+                     .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+                     .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+                     .header-item { display: flex; align-items: center; gap: 5px; font-size: 18px; font-weight: bold; color: #1866ae; }
+                     .header img { height: 45px; }
+                     .certificate-title { font-size: 24px; font-weight: bold; color: #1866ae; margin: 10px 0; }
+                     table { width: auto; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
+                     table th, table td { border: 1px solid #dee2e6; padding: 6px; font-size: 10px; text-align: center; }
+                     table th { background-color: #1866ae; color: white; white-space: nowrap; }
+                     table td { color: black; }
+                     .signature { font-size: 20px; }
                </style>
-            </head>
-            <body>
+             </head>
+             <body>
                <div class="certificate-title">شهادة المصدر والمنشأ</div>
                <div class="header">
-                  <div class="header-item">
-                     <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
-                     <span>الغرفة التجارية المصرية بالإسكندرية</span>
-                  </div>
-                  <div class="header-item">
-                     <span>Alexandria Chamber of Commerce</span>
-                     <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
-                  </div>
+                 <div class="header-item">
+                   <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
+                   <span>الغرفة التجارية المصرية بالإسكندرية</span>
+                 </div>
+                 <div class="header-item">
+                   <span>Alexandria Chamber of Commerce</span>
+                   <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
+                 </div>
                </div>
                ${table.outerHTML}
                <script>
-                  window.onload = function() {
-                     window.print();
-                     window.close();
-                  }
+                   window.onload = function() {
+                       window.print();
+                       window.close();
+                   }
                <\/script>
-            </body>
-            </html>
+             </body>
+             </html>
          `;
-         
          printWindow.document.open();
          printWindow.document.write(htmlContent);
          printWindow.document.close();
