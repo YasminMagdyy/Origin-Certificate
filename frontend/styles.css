@@ -1,5 +1,3 @@
-/* Modified CSS for a More Compact Layout */
-
 /* General Styles */
 html, body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -236,7 +234,7 @@ table td {
   text-align: center;
   FONT-SIZE: 13PX;
   min-width: 100px; 
-  white-space: nowrap; /* Keep text in one line */
+  /* white-space: nowrap; */
 }
 
 table th {
@@ -254,6 +252,10 @@ table tr:nth-child(even) {
 
 table tr:hover {
   background-color: #e0e0e0;
+}
+
+.date-column {
+  white-space: nowrap;
 }
 
 /* Modal */

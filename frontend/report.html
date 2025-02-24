@@ -88,9 +88,9 @@
                      <th>البضائع</th>
                      <th>بلد التصدير</th>
                      <th>بلد المنشأ</th>
-                     <th>تاريخ العملية</th>
+                     <th class="date-column">تاريخ العملية</th>
                      <th>رقم الايصال</th>
-                     <th>تاريخ الايصال</th>
+                     <th class="date-column">تاريخ الايصال</th>
                      <th>القيمة المدفوعة</th>
                      <th>القيمة (الكمية)</th>
                      <th>التكلفة</th>
@@ -111,9 +111,9 @@
                      <td>{{ cert.ExportedGoods.ExportedGoods }}</td>
                      <td>{{ cert.ExportCountry.CountryName }}</td>
                      <td>{{ cert.OriginCountry.CountryName }}</td>
-                     <td>{{ cert.IssueDate }}</td>
+                     <td class="date-column">{{ cert.IssueDate }}</td>
                      <td>{{ cert.ReceiptNumber }}</td>
-                     <td>{{ cert.ReceiptDate }}</td>
+                     <td><td class="date-column">{{ cert.ReceiptDate }}</td>
                      <td>{{ cert.PaymentAmount }}</td>
                      <td>{{ cert.quantity }} {{ cert.quantity_unit }}</td>
                      <td>{{ cert.cost }}</td>
@@ -125,6 +125,7 @@
                   {% endfor %}
                </tbody>
             </table>
+            <p id="certificateCount"></p>
          </div>
          <div class="download-buttons">
             <button>
@@ -145,8 +146,27 @@
          <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
       </div>
   
-   <script>
-      window.onload = function() {
+      <script>
+         
+         function updateCertificateCount() {
+         // Get the table and all rows in the tbody
+         const table = document.getElementById("certificatesTable");
+         const rows = table.querySelectorAll("tbody tr");
+         
+         // Check if the only row is the "no data" row (it has a colspan attribute)
+         let count = rows.length;
+         if (rows.length === 1 && rows[0].querySelector("td[colspan]")) {
+            count = 0;
+         }
+         
+         // Display the count in the counter element
+         document.getElementById("certificateCount").textContent = "عدد الشهادات: " + count;
+         }
+
+         // Run the function when the page loads
+         document.addEventListener("DOMContentLoaded", updateCertificateCount);
+
+               window.onload = function() {
          if (window.location.search) {
             let params = new URLSearchParams(window.location.search);
             let keepParams = ['process_date_from', 'process_date_to', 'cargo', 'export_country'];
@@ -178,130 +198,118 @@
             sidebar.classList.remove('active');
          }
       });
-
-      function printTableAsPDF() {
-    let printWindow = window.open('', '_blank');
-    let table = document.getElementById('certificatesTable');
-    if (!table) {
-        alert('الجدول غير موجود!');
-        return;
-    }
-    
-    let htmlContent = `
-        <html>
-        <head lang="ar" dir="rtl">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    {% load static %}
-      <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f6f9;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 1000px; /* تكبير عرض الحاوية */
-            margin: auto;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* تنسيق الهيدر */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0; /* تقليل المسافات العلوية والسفلية */
-        }
-
-        .header-item {
-            display: flex;
-            align-items: center;
-            gap: 5px; /* تقليل المسافة بين النص والصورة */
-            font-size: 18px;
-            font-weight: bold;
-            color: #1866ae;
-        }
-
-        .header img {
-            height: 45px; 
-        }
-
-        .certificate-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1866ae;
-            margin: 10px 0; 
-        }
-
-        table {
-            width: 95%; 
-            margin: 10px auto; 
-            border-collapse: collapse;
-            background: white;
-            direction : rtl;
-        }
-
-        table th, table td {
-            border: 1px solid #dee2e6;
-            padding: 14px; 
-            text-align: center;
-            font-size: 16px;
-            min-width: 100px; 
-            white-space: nowrap; 
-        }
-
-        th {
-            background-color: #1866ae;
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-
-        }
-        td {
-            color: black;
-        }
-
-        .signature {
-            font-size: 20px;
-        }
-    </style>
-</head>
-        <body>
-          <div class="certificate-title">شهادة المصدر والمنشأ</div>
-           <div class="header">
-        <div class="header-item">
-            <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
-            <span>الغرفة التجارية المصرية بالإسكندرية</span>
-        </div>
-        <div class="header-item">
-            <span>Alexandria Chamber of Commerce</span>
-            <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
-        </div>
-    </div>
-
-            ${table.outerHTML}
-            <script>
-                window.onload = function() {
-                    window.print();
-                    window.close();
-                }
-            <\/script>
-        </body>
-        </html>
-    `;
-    
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-}
-    </script>    
+         function printTableAsPDF() {
+             let printWindow = window.open('', '_blank');
+             let table = document.getElementById('certificatesTable');
+             if (!table) {
+                 alert('الجدول غير موجود!');
+                 return;
+             }
+             
+             let htmlContent = `
+                 <html lang="ar" dir="rtl">
+                 <head>
+                   <meta charset="UTF-8">
+                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                   <title>طباعة الشهادات</title>
+                   <style>
+                     /* Set the page size to A4 with custom margins */
+                     @page {
+                     size: A4 landscape;
+                     margin: 20mm;
+                     }
+                     body {
+                       font-family: Arial, sans-serif;
+                       margin: 0;
+                       padding: 10mm; /* internal padding for the document */
+                       background-color: #f4f6f9;
+                       text-align: center;
+                     }
+                     .container {
+                       max-width: 1000px;
+                       margin: auto;
+                       background: white;
+                       padding: 15px;
+                       border-radius: 10px;
+                       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                     }
+                     /* Header styling */
+                     .header {
+                       display: flex;
+                       justify-content: space-between;
+                       align-items: center;
+                       padding: 10px 0;
+                     }
+                     .header-item {
+                       display: flex;
+                       align-items: center;
+                       gap: 5px;
+                       font-size: 18px;
+                       font-weight: bold;
+                       color: #1866ae;
+                     }
+                     .header img {
+                       height: 45px;
+                     }
+                     .certificate-title {
+                       font-size: 24px;
+                       font-weight: bold;
+                       color: #1866ae;
+                       margin: 10px 0;
+                     }
+                     table {
+                       width: auto; 
+                       margin: 20px auto; 
+                       border-collapse: collapse;
+                       background: white;
+                       direction: rtl;
+                     }
+                     table th, table td {
+                       border: 1px solid #dee2e6;
+                        padding: 6px;
+                        font-size: 10px;
+                       text-align: center;
+                     }
+                     table th {
+                       background-color: #1866ae;
+                       color: white;
+                     }
+                     table td {
+                       color: black;
+                     }
+                     .signature {
+                       font-size: 20px;
+                     }
+                   </style>
+                 </head>
+                 <body>
+                   <div class="certificate-title">شهادة المصدر والمنشأ</div>
+                   <div class="header">
+                     <div class="header-item">
+                       <img src="{% static 'ACOC.png' %}" alt="شعار الغرفة التجارية">
+                       <span>الغرفة التجارية المصرية بالإسكندرية</span>
+                     </div>
+                     <div class="header-item">
+                       <span>Alexandria Chamber of Commerce</span>
+                       <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
+                     </div>
+                   </div>
+                   ${table.outerHTML}
+                   <script>
+                       window.onload = function() {
+                           window.print();
+                           window.close();
+                       }
+                   <\/script>
+                 </body>
+                 </html>
+             `;
+             
+             printWindow.document.open();
+             printWindow.document.write(htmlContent);
+             printWindow.document.close();
+         }
+         </script>
+         
 </body>
 </html>
