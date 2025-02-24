@@ -14,12 +14,14 @@
          <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
          <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
       </div>
+  
       <div class="navbar-left" dir="rtl">
          <label id="headerLeft2"> Origin Certificate System | </label>
          <label id="headerLeft"> Alexandria Chamber of Commerce </label>
       </div>
+  
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-   </nav>
+    </nav>
   
    <div class="sidebar" id="sidebar">
       <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
@@ -30,6 +32,7 @@
       <a href="{% url 'report' %}">تقرير</a>
    </div>
 
+   <!-- Content Wrapper -->
    <div class="content-wrapper">
       <div class="container">
          <h1>تقرير الشهادات</h1>
@@ -75,6 +78,7 @@
                   <tr>
                      <th>المعرف</th>
                      <th>اسم المكتب</th>
+                     <!-- <th>اسم الفرع</th> -->
                      <th>رقم السجل</th>
                      <th>رقم الشهادة</th>
                      <th>اسم الشركة</th>
@@ -94,7 +98,7 @@
                </thead>
                <tbody>
                   {% for cert in certificates %}
-                  <tr>
+                  <tr class="data-row">
                      <td>{{ cert.id }}</td>
                      <td>{{ cert.Office.OfficeName }}</td>
                      <td>{{ cert.RegistrationNumber }}</td>
@@ -114,18 +118,37 @@
                      <td>{{ cert.cost }}</td>
                   </tr>
                   {% empty %}
-                  <tr>
+                  <tr class="no-data">
                      <td colspan="18">لا توجد بيانات</td>
                   </tr>
                   {% endfor %}
                </tbody>
                <tfoot>
+                  <!-- Title Row -->
                   <tr>
-                     <td colspan="16" style="text-align: right; font-weight: bold;">إجمالي التكلفة</td>
-                     <td>
-                        {% for total in currency_totals %}
-                           {{ total.total_cost }} {{ total.cost_currency }}<br>
-                        {% endfor %}
+                     <td colspan="17" style="text-align: center; font-weight: bold; background: #eee;">
+                        إجمالي التكلفة حسب العملة
+                     </td>
+                  </tr>
+                  <!-- Nested table for currency totals in separate cells -->
+                  <tr>
+                     <td colspan="17">
+                        <table style="width:100%; border-collapse:collapse;">
+                           <tr>
+                              {% for total in currency_totals %}
+                              <th style="border: 1px solid #dee2e6; padding: 4px; text-align: center; background-color: #1866ae; color: #fff;">
+                                 {{ total.cost_currency }}
+                              </th>
+                              {% endfor %}
+                           </tr>
+                           <tr>
+                              {% for total in currency_totals %}
+                              <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center; font-weight: bold;">
+                                 {{ total.total_cost }}
+                              </td>
+                              {% endfor %}
+                           </tr>
+                        </table>
                      </td>
                   </tr>
                </tfoot>
@@ -145,9 +168,9 @@
   
    <div class="footer">
       <p>
-         This website and system have been developed by the Alexandria Chamber of Commerce IT Department.
+         This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
          For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
-         Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action.
+         Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
          All activities on this platform are monitored and logged for security purposes.
       </p>
       <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
@@ -155,28 +178,16 @@
   
    <script>
       function updateCertificateCount() {
-         const table = document.getElementById("certificatesTable");
-         const rows = table.querySelectorAll("tbody tr");
-         let count = rows.length;
-         if (rows.length === 1 && rows[0].querySelector("td[colspan]")) {
-            count = 0;
-         }
+         // Only count rows with the "data-row" class
+         const rows = document.querySelectorAll("#certificatesTable tbody tr.data-row");
+         const count = rows.length;
          document.getElementById("certificateCount").textContent = "عدد الشهادات: " + count;
       }
       document.addEventListener("DOMContentLoaded", updateCertificateCount);
       
+      // إزالة معطيات الاستعلام من عنوان الصفحة عند عمل ريفريش
       window.onload = function() {
-         if (window.location.search) {
-            let params = new URLSearchParams(window.location.search);
-            let keepParams = ['process_date_from', 'process_date_to', 'cargo', 'export_country'];
-            let newParams = new URLSearchParams();
-            keepParams.forEach(param => {
-               if (params.has(param)) {
-                  newParams.set(param, params.get(param));
-               }
-            });
-            window.history.replaceState({}, document.title, window.location.pathname + '?' + newParams.toString());
-         }
+         window.history.replaceState({}, document.title, window.location.pathname);
       };
 
       function toggleSidebar() {
@@ -184,6 +195,7 @@
          sidebar.classList.toggle("active");
       }
 
+      // Close the sidebar when clicking anywhere outside the sidebar and menu button
       document.addEventListener('click', function (e) {
          const sidebar = document.getElementById('sidebar');
          const menuBtn = document.querySelector('.menu-btn');
@@ -208,19 +220,18 @@
                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                <title>طباعة الشهادات</title>
                <style>
-                 @page { size: A4 landscape; margin: 20mm; }
-                 body { font-family: Arial, sans-serif; margin: 0; padding: 10mm; background-color: #f4f6f9; text-align: center; }
-                 .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-                 .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
-                 .header-item { display: flex; align-items: center; gap: 5px; font-size: 18px; font-weight: bold; color: #1866ae; }
-                 .header img { height: 45px; }
-                 .certificate-title { font-size: 24px; font-weight: bold; color: #1866ae; margin: 10px 0; }
-                 table { width: auto; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
-                 table th, table td { border: 1px solid #dee2e6; padding: 6px; font-size: 10px; text-align: center; }
-                 table th { background-color: #1866ae; color: white; white-space: nowrap; }
-                 table td { color: black; }
-                 .date-column { white-space: nowrap; }
-                 .signature { font-size: 20px; }
+                     @page { size: A4 landscape; margin: 20mm; }
+                     body { font-family: Arial, sans-serif; margin: 0; padding: 10mm; background-color: #f4f6f9; text-align: center; }
+                     .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+                     .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+                     .header-item { display: flex; align-items: center; gap: 5px; font-size: 18px; font-weight: bold; color: #1866ae; }
+                     .header img { height: 45px; }
+                     .certificate-title { font-size: 24px; font-weight: bold; color: #1866ae; margin: 10px 0; }
+                     table { width: auto; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
+                     table th, table td { border: 1px solid #dee2e6; padding: 6px; font-size: 10px; text-align: center; }
+                     table th { background-color: #1866ae; color: white; white-space: nowrap; }
+                     table td { color: black; }
+                     .signature { font-size: 20px; }
                </style>
              </head>
              <body>
