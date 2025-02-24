@@ -15,6 +15,7 @@ from djmoney.money import Money
 from decimal import Decimal, InvalidOperation
 import io
 import pandas as pd
+from django.db.models import Sum
 
 def index(request):
     return render(request, 'index.html')
@@ -492,14 +493,6 @@ def get_cargo_options(request):
 def get_country_options(request):
     countries = Country.objects.all().values('id', 'CountryName')
     return JsonResponse({'countries': list(countries)})
-
-from django.shortcuts import render, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.db.models import Sum
-from .models import Certificate, Cargo, Country
-import pandas as pd
-import io
 
 @csrf_exempt
 def report_view(request):
