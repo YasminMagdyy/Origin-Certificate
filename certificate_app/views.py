@@ -203,7 +203,12 @@ def save_certificate(request):
             
             # Normalize input text fields
             office_name = normalize_text(data['office']) if data['office'] else None
-            registration_number = normalize_text(data['registrationNumber']) if data['registrationNumber'] else None
+            # If companyStatus is "غير مقيد", use "غير موجود" for registrationNumber
+            if data['companyStatus'] == 'غير مقيد':
+                registration_number = "غير موجود"
+            else:
+                registration_number = normalize_text(data['registrationNumber']) if data['registrationNumber'] else None
+
             certificate_number = normalize_text(data['certificateNumber'])
             company_name = normalize_text(data['companyName'])
             company_address = normalize_text(data['companyAddress'])
@@ -213,13 +218,16 @@ def save_certificate(request):
             export_country_value = normalize_text(data['exportCountry'])
             origin_country_value = normalize_text(data['originCountry'])
             
-            # Get or create related objects (handle office being None)
+            # Get or create related objects (handle office based on company status)
             if company_status == 'مقيد' and office_name:
                 office, _ = Office.objects.get_or_create(
                     OfficeName=office_name,
                 )
             else:
-                office = None
+                # For "غير مقيد", use "غير موجود"
+                office, _ = Office.objects.get_or_create(
+                    OfficeName="غير موجود",
+                )
 
             company, _ = Company.objects.get_or_create(
                 CompanyName=company_name,
@@ -237,15 +245,15 @@ def save_certificate(request):
             )
             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
             
-            # Retrieve new fields from data
+            # Retrieve new fields
             quantity = data.get('quantity')
             quantity_unit = data.get('quantity_unit')
             cost_value = data.get('cost')
             cost_currency = data.get('cost_currency')
             
-            # Create the certificate including the new fields.
+            # Create the certificate
             certificate = Certificate.objects.create(
-                Office=office,  # Office can be None if "غير مقيد"
+                Office=office,
                 Company=company,
                 RegistrationNumber=registration_number,
                 CertificateNumber=certificate_number,
@@ -258,7 +266,7 @@ def save_certificate(request):
                 PaymentAmount=data['paymentAmount'],
                 quantity=quantity,
                 quantity_unit=quantity_unit,
-                cost=Money(cost_value, cost_currency)  # MoneyField assignment
+                cost=Money(cost_value, cost_currency)
             )            
             return JsonResponse({
                 'status': 'success',
@@ -286,7 +294,10 @@ def update_certificate(request, certificate_id):
             
             # Normalize input text fields
             office_name = normalize_text(data.get('office'))
-            registration_number = normalize_text(data.get('registrationNumber'))
+            if data.get('companyStatus') == 'غير مقيد':
+                registration_number = "غير موجود"
+            else:
+                registration_number = normalize_text(data.get('registrationNumber'))
             certificate_number = normalize_text(data.get('certificateNumber'))
             company_name = normalize_text(data.get('companyName'))
             company_address = normalize_text(data.get('companyAddress'))
@@ -296,17 +307,15 @@ def update_certificate(request, certificate_id):
             export_country_value = normalize_text(data.get('exportCountry'))
             origin_country_value = normalize_text(data.get('originCountry'))
             
-            # Handle office and registrationNumber based on company status
+            # Handle office based on company status
             if company_status == 'غير مقيد':
-                office = None
-                registration_number = None
+                office, _ = Office.objects.get_or_create(OfficeName="غير موجود")
             else:
                 if office_name:
                     office, _ = Office.objects.get_or_create(OfficeName=office_name)
                 else:
                     office = None
 
-            # Get or create related objects
             company, created = Company.objects.get_or_create(
                 CompanyName=company_name,
                 defaults={
@@ -316,7 +325,6 @@ def update_certificate(request, certificate_id):
                 }
             )
             if not created:
-                # Update the company's fields if changes were made
                 company.CompanyAddress = company_address
                 company.CompanyType = company_type
                 company.CompanyStatus = company_status
@@ -332,13 +340,11 @@ def update_certificate(request, certificate_id):
             cost_value = data.get('cost')
             cost_currency = data.get('cost_currency')
             
-            # Validate and convert cost_value to Decimal
             try:
                 cost_value = Decimal(str(cost_value))
             except InvalidOperation:
                 return JsonResponse({'status': 'error', 'message': 'Invalid cost value'}, status=400)
             
-            # Update the certificate
             certificate = Certificate.objects.get(id=certificate_id)
             certificate.Office = office
             certificate.Company = company
@@ -384,7 +390,7 @@ def filter_certificates(request):
     # Build a list of certificate dictionaries
     results = []
     for cert in certificates:
-        office_name = cert.Office.OfficeName if cert.Office else 'null'
+        office_name = cert.Office.OfficeName if cert.Office else None
         results.append({
             'id': cert.id,
             'office_name': office_name,
@@ -409,9 +415,9 @@ def filter_certificates(request):
             'cost_amount': str(cert.cost.amount),
             'cost_currency': str(cert.cost.currency)
         })
-
-    return JsonResponse({'certificates': results})
-
+    
+    return JsonResponse({'status': 'success', 'certificates': results})
+    
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def delete_certificate(request, certificate_id):

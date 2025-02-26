@@ -217,9 +217,9 @@ document.getElementById('saveButton').addEventListener('click', function () {
 
   // Check if office and registrationNumber fields are disabled
   const isUnregistered = document.getElementById('companyStatus').value === 'غير مقيد';
-  const office = isUnregistered ? null : document.getElementById('office').value;
-  const registrationNumber = isUnregistered ? null : document.getElementById('registrationNumber').value;
-
+  const office = isUnregistered ? "غير موجود" : document.getElementById('office').value;
+  const registrationNumber = isUnregistered ? "غير موجود" : document.getElementById('registrationNumber').value;
+  
   // Existing fields
   const certificateNumber = document.getElementById('certificateNumber').value;
   const companyName = document.getElementById('companyName').value;

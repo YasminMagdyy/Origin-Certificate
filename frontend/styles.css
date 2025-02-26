@@ -152,15 +152,14 @@ h1 {
 /* Form Containers */
 .form-container {
   flex: 1;
-  padding: 10px; /* Reduced padding */
-  /* background: linear-gradient(to bottom right, #738e9c, #6c8ba8); */
+  padding: 10px; 
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Form Group */
 .form-group {
-  margin-bottom: 10px; /* Reduced spacing between groups */
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -168,7 +167,7 @@ h1 {
 
 .form-group label {
   width: 100%;
-  margin-bottom: 3px; /* Tighter spacing */
+  margin-bottom: 3px;
   font-weight: bold;
   color: #1b2e49;
   font-size: 12px;
@@ -179,10 +178,10 @@ h1 {
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 8px; /* Reduced padding */
+  padding: 8px; 
   border: 2px solid #ced4da;
-  border-radius: 6px; /* Smaller border radius */
-  font-size: 10px; /* Smaller text */
+  border-radius: 6px;
+  font-size: 10px;
   transition: border-color 0.3s ease;
   text-align: right;
   box-sizing: border-box;
@@ -197,13 +196,13 @@ h1 {
 
 /* Buttons */ 
 button {
-  padding: 8px 16px; /* Reduced button size */
+  padding: 8px 16px;
   background-color: #465776;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px; /* Smaller font size */
+  font-size: 14px;
   transition: background-color 0.3s;
 }
 
@@ -233,7 +232,6 @@ table td {
   border: 1px solid #dee2e6;
   text-align: center;
   FONT-SIZE: 12PX;
-  max-width: 100x;
 }
 
 table th {
@@ -242,7 +240,9 @@ table th {
   font-size: 14px;
   white-space: nowrap;
 }
-
+/* table td {
+  max-width: 100px;
+} */
 table tr:nth-child(even) {
   background-color: #f2f2f2;
 }
@@ -263,7 +263,7 @@ table tr:hover {
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  padding: 20px; /* Reduced padding */
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
@@ -272,7 +272,7 @@ table tr:hover {
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Reduced gap */
+  gap: 10px;
 }
 
 .modal-content label {
@@ -281,7 +281,7 @@ table tr:hover {
 }
 
 .modal-content input {
-  padding: 10px; /* Reduced padding */
+  padding: 10px;
   border: 2px solid #6c757d;
   border-radius: 6px;
 }
@@ -289,7 +289,7 @@ table tr:hover {
 /* Close Button */
 .close {
   cursor: pointer;
-  font-size: 20px; /* Smaller close icon */
+  font-size: 20px;
   text-align: right;
 }
 
@@ -300,7 +300,7 @@ table tr:hover {
 }
 
 #saveButton {
-  padding: 10px 20px; /* Reduced padding */
+  padding: 10px 20px;
   font-size: 16px;
   transition: background-color 0.3s;
 }
@@ -308,17 +308,16 @@ table tr:hover {
 #saveButton:hover {
   background-color: #9db4da;
 }
-/* Ensure #newTableContainer is scrollable if content is wider than its parent */
 #newTableContainer {
-  width: 100%;        /* Take full width of parent */
-  overflow-x: auto;   /* Enable horizontal scroll if needed */
-  margin-top: 20px;   /* Spacing above, adjust as needed */
-  display: block;     /* Ensure block-level so overflow works */
+  width: 100%;       
+  overflow-x: auto;  
+  margin-top: 20px;  
+  display: block; 
 }
 /* New Table Container */
 #newTableContainer table {
   width: 100%;
-  min-width: 900px;   /* Adjust to desired minimum width */
+  min-width: 900px;
   border-collapse: collapse;
   margin-top: 10px;
   overflow-x: auto;
@@ -327,7 +326,7 @@ table tr:hover {
 #newTableContainer th, 
 #newTableContainer td {
   border: 1px solid #6b6969;
-  padding: 6px; /* Reduced padding */
+  padding: 6px;
   text-align: center;
 }
 
@@ -344,37 +343,34 @@ table tr:hover {
 
 /* Add Button */
 .add-button {
-  padding: 8px 10px; /* Reduced padding */
-  font-size: 12px; /* Smaller font size */
+  padding: 8px 10px; 
+  font-size: 12px; 
   transition: background-color 0.3s ease;
-  margin-top: 5px; /* Reduced margin */
+  margin-top: 5px; 
 }
 
 .add-button:hover {
   background-color: #0f1c2e;
 }
 
-/* Placeholder Text */
 ::placeholder {
   color: #000000;
   font-size: 12px; 
 }
 
-/* Revised Edit Modal CSS */
 #editModal {
-  width: 600px;      /* Reduced width for a more compact modal */
-  padding: 20px;     /* Added padding to ensure inner spacing */
-  margin-top: 20px;  /* Maintain some top margin if needed */
-  box-sizing: border-box; /* Ensure padding is included in width */
+  width: 600px;      
+  padding: 20px;     
+  margin-top: 20px;  
+  box-sizing: border-box;
 }
 
 #editForm {
-  margin-top: 0;     /* Remove the negative margin */
-  width: 100%;       /* Use full width of the modal container */
-  height: auto;      /* Allow height to adjust based on content */
+  margin-top: 0;    
+  width: 100%;      
+  height: auto;    
 }
 
-/* Add these styles to your existing styles.css */
 .filter-options {
   margin-bottom: 20px;
 }
@@ -419,17 +415,17 @@ a{
   height: 50px;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Distributes space between text and image */
+  justify-content: space-between; 
 }
 
 .footer p {
   direction: ltr;
   margin: 0;
-  flex: 1; /* Ensures the paragraph takes up available space */
+  flex: 1; 
 }
 
 .footer-img {
-  height: 80%;  /* Adjust as needed to fit the footer height */
+  height: 80%; 
   margin-left: 10px;
   margin-right: 10px;
 }

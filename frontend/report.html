@@ -71,7 +71,12 @@
          </form>
 
          <hr>
-         <h2>نتائج التقرير</h2>
+         <!-- Flex container for heading and certificate count -->
+         <div class="results-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>نتائج التقرير</h2>
+            <p id="certificateCount" style="margin: 0; font-weight: bold;"></p>
+         </div>
+
          <div class="table-container">
             <table id="certificatesTable">
                <thead>
@@ -133,17 +138,17 @@
                   <!-- Nested table for currency totals in separate cells -->
                   <tr>
                      <td colspan="17">
-                        <table style="width:100%; border-collapse:collapse;">
+                        <table style="width:50%; margin: 0 auto; border-collapse: collapse; table-layout: fixed;">
                            <tr>
                               {% for total in currency_totals %}
-                              <th style="border: 1px solid #dee2e6; padding: 4px; text-align: center; background-color: #1866ae; color: #fff;">
+                              <th style="border: 1px solid #dee2e6; padding: 8px 12px; text-align: center; background-color: #6c8ba8; color: #fff; font-size: 14px;">
                                  {{ total.cost_currency }}
                               </th>
                               {% endfor %}
                            </tr>
                            <tr>
                               {% for total in currency_totals %}
-                              <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center; font-weight: bold;">
+                              <td style="border: 1px solid #dee2e6; padding: 8px 12px; text-align: center; font-weight: bold; font-size: 14px;">
                                  {{ total.total_cost }}
                               </td>
                               {% endfor %}
@@ -153,7 +158,6 @@
                   </tr>
                </tfoot>
             </table>
-            <p id="certificateCount"></p>
          </div>
          <div class="download-buttons">
             <button>
@@ -209,6 +213,8 @@
       function printTableAsPDF() {
          let printWindow = window.open('', '_blank');
          let table = document.getElementById('certificatesTable');
+         let countElement = document.getElementById('certificateCount');
+         let certCountText = countElement ? countElement.textContent : '';
          if (!table) {
             alert('الجدول غير موجود!');
             return;
@@ -222,15 +228,18 @@
                <style>
                      @page { size: A4 landscape; margin: 20mm; }
                      body { font-family: Arial, sans-serif; margin: 0; padding: 10mm; background-color: #f4f6f9; text-align: center; }
-                     .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+                     .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
                      .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
                      .header-item { display: flex; align-items: center; gap: 5px; font-size: 18px; font-weight: bold; color: #1866ae; }
                      .header img { height: 45px; }
                      .certificate-title { font-size: 24px; font-weight: bold; color: #1866ae; margin: 10px 0; }
-                     table { width: auto; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
+                     table { width: 50%; margin: 20px auto; border-collapse: collapse; background: white; direction: rtl; }
                      table th, table td { border: 1px solid #dee2e6; padding: 6px; font-size: 10px; text-align: center; }
-                     table th { background-color: #1866ae; color: white; white-space: nowrap; }
+                     table th { background-color: #6c8ba8; color: white; white-space: nowrap; }
                      table td { color: black; }
+                     .date-column {
+                        white-space: nowrap;
+                        }
                      .signature { font-size: 20px; }
                </style>
              </head>
@@ -246,6 +255,7 @@
                    <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Alexandria Chamber of Commerce Logo">
                  </div>
                </div>
+               <div class="count">${certCountText}</div>
                ${table.outerHTML}
                <script>
                    window.onload = function() {
