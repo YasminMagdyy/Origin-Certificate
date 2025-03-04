@@ -186,9 +186,8 @@ def get_company_data(request):
         except Exception as e:
             print(f"Error: {e}")  # Add this line
             return JsonResponse({'error': str(e)}, status=500)
-                                             
 logger = logging.getLogger(__name__)
-
+                                             
 @csrf_exempt
 def save_certificate(request):
     if request.method == 'POST':
@@ -214,20 +213,19 @@ def save_certificate(request):
             company_address = normalize_text(data['companyAddress'])
             company_status = normalize_text(data['companyStatus'])
             company_type = normalize_text(data['companyType'])
+            
+            # The cargo field now contains aggregated cargo names (e.g. "Cargo1 | Cargo2")
             cargo_value = normalize_text(data['cargo'])
+            
             export_country_value = normalize_text(data['exportCountry'])
             origin_country_value = normalize_text(data['originCountry'])
             
             # Get or create related objects (handle office based on company status)
             if company_status == 'مقيد' and office_name:
-                office, _ = Office.objects.get_or_create(
-                    OfficeName=office_name,
-                )
+                office, _ = Office.objects.get_or_create(OfficeName=office_name)
             else:
                 # For "غير مقيد", use "غير موجود"
-                office, _ = Office.objects.get_or_create(
-                    OfficeName="غير موجود",
-                )
+                office, _ = Office.objects.get_or_create(OfficeName="غير موجود")
 
             company, _ = Company.objects.get_or_create(
                 CompanyName=company_name,
@@ -237,21 +235,18 @@ def save_certificate(request):
                     'CompanyStatus': company_status
                 }
             )
-            export_country, _ = Country.objects.get_or_create(
-                CountryName=export_country_value
-            )
-            origin_country, _ = Country.objects.get_or_create(
-                CountryName=origin_country_value
-            )
+            export_country, _ = Country.objects.get_or_create(CountryName=export_country_value)
+            origin_country, _ = Country.objects.get_or_create(CountryName=origin_country_value)
+            # Use the aggregated cargo value
             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
             
-            # Retrieve new fields
+            # Retrieve aggregated new fields (aggregated values sent from the front end)
             quantity = data.get('quantity')
             quantity_unit = data.get('quantity_unit')
             cost_value = data.get('cost')
             cost_currency = data.get('cost_currency')
             
-            # Create the certificate
+            # Create the certificate using the aggregated shipment data
             certificate = Certificate.objects.create(
                 Office=office,
                 Company=company,
@@ -267,7 +262,7 @@ def save_certificate(request):
                 quantity=quantity,
                 quantity_unit=quantity_unit,
                 cost=Money(cost_value, cost_currency)
-            )            
+            )
             return JsonResponse({
                 'status': 'success',
                 'message': 'Certificate saved successfully!',
@@ -279,6 +274,7 @@ def save_certificate(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 
 @csrf_exempt
 def update_certificate(request, certificate_id):
@@ -303,7 +299,10 @@ def update_certificate(request, certificate_id):
             company_address = normalize_text(data.get('companyAddress'))
             company_status = normalize_text(data.get('companyStatus'))
             company_type = normalize_text(data.get('companyType'))
+            
+            # Aggregated cargo field (multiple shipment cargo names joined by " | ")
             cargo_value = normalize_text(data.get('cargo'))
+            
             export_country_value = normalize_text(data.get('exportCountry'))
             origin_country_value = normalize_text(data.get('originCountry'))
             
@@ -332,9 +331,10 @@ def update_certificate(request, certificate_id):
             
             export_country, _ = Country.objects.get_or_create(CountryName=export_country_value)
             origin_country, _ = Country.objects.get_or_create(CountryName=origin_country_value)
+            # Use the aggregated cargo value
             cargo_obj, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_value)
             
-            # Retrieve new fields
+            # Retrieve aggregated new fields
             quantity = data.get('quantity')
             quantity_unit = data.get('quantity_unit')
             cost_value = data.get('cost')

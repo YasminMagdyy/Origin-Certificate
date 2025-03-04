@@ -429,3 +429,124 @@ a{
   margin-left: 10px;
   margin-right: 10px;
 }
+
+/* Match your existing .form-group input/select styling */
+.select2-container--default .select2-selection--single {
+  width: 100% !important;
+  height: auto !important;
+  padding: 8px !important;
+  border: 2px solid #ced4da !important;
+  border-radius: 6px !important;
+  font-size: 10px !important;
+  text-align: right !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  background: #fff !important;
+}
+
+/* Remove extra padding in the rendered text area and keep line-height normal */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: normal !important;
+  padding: 0 !important;
+  margin-right: 2px !important; /* adjust as needed */
+  color: #333;
+}
+
+/* Position the dropdown arrow for RTL; move it to the right if you prefer. */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: 8px !important; /* if you want the arrow on the left, swap right/left */
+  right: auto !important;
+  background: none !important; /* remove any default background that might appear */
+}
+
+/* If the default arrow triangle is black or off-center, you can adjust its border color */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border-color: #333 transparent transparent transparent !important;
+}
+
+/* Style the dropdown itself */
+.select2-container--default .select2-dropdown {
+  border: 2px solid #ced4da !important;
+  border-radius: 6px !important;
+}
+
+/* The small search box at the top of the dropdown */
+.select2-container--default .select2-search--dropdown {
+  padding: 5px !important;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ced4da;
+}
+
+/* Search field inside the dropdown (RTL + smaller font) */
+.select2-container--default .select2-search--dropdown .select2-search__field {
+  width: 100% !important;
+  padding: 8px !important;
+  font-size: 10px !important;
+  border: none !important;
+  background-color: transparent !important;
+  text-align: right !important;
+  direction: rtl !important;
+  box-sizing: border-box;
+}
+
+/* The list of options */
+.select2-container--default .select2-results__options {
+  max-height: 250px;  /* scroll if too long */
+  overflow-y: auto;
+  font-size: 10px !important;
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* Highlighted option on hover/keyboard nav */
+.select2-container--default .select2-results__option--highlighted {
+  background-color: #aec4e3 !important;
+  color: #1b2e49 !important;
+}
+
+/* For single-select placeholders */
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+  color: #000 !important; /* Change to black */
+}
+
+/* For the search field placeholder inside the dropdown */
+.select2-container--default .select2-search--dropdown .select2-search__field::placeholder {
+  color: #000 !important; /* Change to black */
+}
+
+/* For cross-browser support, include these if needed: */
+.select2-container--default .select2-search--dropdown .select2-search__field:-ms-input-placeholder {
+  color: #000 !important;
+}
+.select2-container--default .select2-search--dropdown .select2-search__field::-ms-input-placeholder {
+  color: #000 !important;
+}
+
+/* Shipment section header */
+.shipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+/* Inline grouping for cargo items */
+.inline-group {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+.inline-group > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+/* Styling for each shipment group */
+.shipment{
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 15px;
+}
