@@ -1,0 +1,34 @@
+2025-04-21 22:21:14,609 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 22:21:14,789 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 22:21:14,800 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:21:14,810 - django.request - WARNING - Not Found: /favicon.ico
+2025-04-21 22:21:14,874 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:21:14,880 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:21:14,885 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:21:14,896 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:22:00,385 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:22:37,127 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:24:32,181 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:24:50,694 - django.request - WARNING - Not Found: /accounts/login/
+2025-04-21 22:29:36,353 - django.request - WARNING - Not Found: /favicon.ico
+2025-04-21 22:30:25,873 - certificate_app.views - WARNING - Failed login attempt for username: super_admin
+2025-04-21 23:11:47,401 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:11:47,468 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:11:49,466 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:11:49,504 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:12:27,078 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:12:27,110 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:12:36,153 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:12:36,196 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:43:56,285 - django.security.csrf - WARNING - Forbidden (CSRF cookie not set.): /login/
+2025-04-21 23:46:04,488 - certificate_app.views - INFO - User super_admin logged in successfully
+2025-04-21 23:46:04,570 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:46:04,622 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:47:48,963 - django.security.csrf - WARNING - Forbidden (CSRF token from POST incorrect.): /login/
+2025-04-21 23:48:56,871 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:48:57,006 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:48:59,307 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:48:59,500 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:49:14,874 - django.request - WARNING - Not Found: /cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js
+2025-04-21 23:49:14,971 - django.request - WARNING - Not Found: /cdn-cgi/challenge-platform/scripts/jsd/main.js
+2025-04-21 23:53:03,167 - django.utils.autoreload - INFO - C:\OriginCertificateSystem\Origin-Certificate\certificate_app\views.py changed, reloading.

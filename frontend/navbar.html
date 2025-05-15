@@ -1,0 +1,25 @@
+{% load static %}
+<nav class="navbar">
+    <div class="navbar-right" dir="ltr">
+      <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label>
+      <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
+      <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
+    </div>
+
+    <div class="navbar-left" dir="rtl">
+      <label id="headerLeft2"> Origin Certificate System | </label>
+      <label id="headerLeft"> Alexandria Chamber of Commerce </label>
+    </div>
+
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  </nav>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
+    <a href="{% url 'index' %}">الصفحة الرئيسية</a>
+    <a href="{% url 'filter' %}">تصفية</a>
+    <a href="{% url 'cargo' %}">البضائع</a>
+    <a href="{% url 'country' %}">البلد</a>
+    <a href="{% url 'report' %}">التقرير</a>
+    <a href="http://127.0.0.1:8090/assets/launch_pad/">منصة انطلاق</a>
+  </div>

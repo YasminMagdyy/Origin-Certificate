@@ -16,7 +16,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #5077ac;
+  background-color: #2f91d3;
   color: white;
   padding: 10px 15px;
   width: 100%;
@@ -87,7 +87,7 @@ html, body {
   left: -200px;
   width: 200px;
   height: 100%;
-  background-color: #4e76a4;
+  background-color: #1081cd;
   color: white;
   transition: left 0.3s ease-in-out;
   padding-top: 50px;
@@ -111,24 +111,26 @@ html, body {
 
 /* Container */
 .container {
-  max-width: 1200px; 
+  max-width: 1400px; 
   margin: 90px auto; 
   padding: 30px; 
   background-color: #ffffff;
   border-radius: 20px; 
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
 }
+
 .content-wrapper {
   flex: 1;
 }
+
 /* Heading Styling */
 h1 {
   text-align: center;
-  color: #6b86ad;
-  font-size: 2rem; /* Smaller heading size */
+  color: #4d79b7;
+  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Reduced shadow */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 1px;
   padding-bottom: 5px;
 }
@@ -145,22 +147,34 @@ h1 {
 /* Form Row */
 .form-row {
   display: flex;
-  gap: 15px; 
-  margin-bottom: 15px; 
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 /* Form Containers */
 .form-container {
   flex: 1;
-  padding: 10px; 
+  padding: 10px;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  min-width: 300px;
+}
+
+/* Center Container */
+.CenterContainer {
+  /* width: 100%; */
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  margin-top: 15px;
 }
 
 /* Form Group */
 .form-group {
   margin-bottom: 10px;
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   align-items: flex-start;
 }
@@ -178,7 +192,7 @@ h1 {
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 8px; 
+  padding: 8px;
   border: 2px solid #ced4da;
   border-radius: 6px;
   font-size: 10px;
@@ -196,8 +210,9 @@ h1 {
 
 /* Buttons */ 
 button {
+  margin-top: 5px;
   padding: 8px 16px;
-  background-color: #465776;
+  background-color: #13679f;
   color: white;
   border: none;
   border-radius: 6px;
@@ -212,14 +227,18 @@ button:hover {
 
 /* Table Styling */
 .table-container {
-  display: block;         
-  max-width: 100%;        
-  overflow-x: auto;      
-  margin-top: 15px;        
+  display: block;
+  max-width: 100%;
+  max-height: 390px; /* ~350px for 10 rows + ~40px for header */
+  overflow-x: auto; /* Horizontal scrolling for wide tables */
+  overflow-y: auto; /* Vertical scrolling for more than 10 rows */
+  margin-top: 15px;
   position: relative;
   z-index: 1;
 }
-
+.table-container th {
+  background-color: #3190d0;
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -228,24 +247,25 @@ table {
 
 table th,
 table td {
-  padding: 8px; 
+  padding: 8px;
   border: 1px solid #dee2e6;
   text-align: center;
-  FONT-SIZE: 12PX;
+  font-size: 12px;
 }
 
 table th {
-  background-color: #6c8ba8;
+  background-color: #3190d0;
   color: white;
   font-size: 14px;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2; /* Above table rows */
 }
-/* table td {
-  max-width: 100px;
-} */
-table tr:nth-child(even) {
+
+/* table tr:nth-child(even) {
   background-color: #f2f2f2;
-}
+} */
 
 table tr:hover {
   background-color: #e0e0e0;
@@ -268,11 +288,15 @@ table tr:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
 }
+#modal {
+  z-index: 1002; /* Ensure it’s above editModal */
+}
 
 .modal-content {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 .modal-content label {
@@ -308,12 +332,14 @@ table tr:hover {
 #saveButton:hover {
   background-color: #9db4da;
 }
+
 #newTableContainer {
-  width: 100%;       
-  overflow-x: auto;  
-  margin-top: 20px;  
-  display: block; 
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+  display: block;
 }
+
 /* New Table Container */
 #newTableContainer table {
   width: 100%;
@@ -331,22 +357,22 @@ table tr:hover {
 }
 
 #newTableContainer th {
-  background-color: #6c8ba8;
+  background-color: #3190d0;
 }
 
 /* Form Group with Add Button */
 .form-group.with-add-button {
   display: flex;
   align-items: center;
-  gap: 5px; /* Reduced gap */
+  gap: 5px;
 }
 
 /* Add Button */
 .add-button {
-  padding: 8px 10px; 
-  font-size: 12px; 
+  padding: 8px 10px;
+  font-size: 12px;
   transition: background-color 0.3s ease;
-  margin-top: 5px; 
+  margin-top: 5px;
 }
 
 .add-button:hover {
@@ -355,20 +381,32 @@ table tr:hover {
 
 ::placeholder {
   color: #000000;
-  font-size: 12px; 
+  font-size: 10px;
 }
 
 #editModal {
-  width: 600px;      
-  padding: 20px;     
-  margin-top: 20px;  
+  width: 90%; /* Responsive width */
+  max-width: 1000px; /* Maximum width */
+  min-width: 300px; /* Minimum width */
+  max-height: 90vh; /* Maximum height relative to viewport */
+  padding: 20px;
   box-sizing: border-box;
+  overflow-y: auto; /* Enable vertical scrolling */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1001; /* Higher than other elements */
 }
 
 #editForm {
-  margin-top: 0;    
-  width: 100%;      
-  height: auto;    
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .filter-options {
@@ -402,30 +440,33 @@ table tr:hover {
 .download-buttons button {
   margin-right: 10px;
 }
-a{
+
+a {
   color: white;
   text-decoration: none;
 }
+
 .footer {
   width: 96%;
-  background-color: #c6d0de;
+  /* background-color: #c6d0de; */
+  background: linear-gradient(90deg, #2C3E50, #3498DB); /* Gradient from dark blue-gray to blue */
   color: white;
   font-size: 15px;
   padding: 2%;
   height: 50px;
   display: flex;
   align-items: center;
-  justify-content: space-between; 
+  justify-content: space-between;
 }
 
 .footer p {
   direction: ltr;
   margin: 0;
-  flex: 1; 
+  flex: 1;
 }
 
 .footer-img {
-  height: 80%; 
+  height: 80%;
   margin-left: 10px;
   margin-right: 10px;
 }
@@ -448,20 +489,20 @@ a{
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: normal !important;
   padding: 0 !important;
-  margin-right: 2px !important; /* adjust as needed */
+  margin-right: 2px !important;
   color: #333;
 }
 
-/* Position the dropdown arrow for RTL; move it to the right if you prefer. */
+/* Position the dropdown arrow for RTL */
 .select2-container--default .select2-selection--single .select2-selection__arrow {
   top: 50% !important;
   transform: translateY(-50%) !important;
-  left: 8px !important; /* if you want the arrow on the left, swap right/left */
+  left: 8px !important;
   right: auto !important;
-  background: none !important; /* remove any default background that might appear */
+  background: none !important;
 }
 
-/* If the default arrow triangle is black or off-center, you can adjust its border color */
+/* Adjust arrow triangle */
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
   border-color: #333 transparent transparent transparent !important;
 }
@@ -479,7 +520,7 @@ a{
   border-bottom: 1px solid #ced4da;
 }
 
-/* Search field inside the dropdown (RTL + smaller font) */
+/* Search field inside the dropdown */
 .select2-container--default .select2-search--dropdown .select2-search__field {
   width: 100% !important;
   padding: 8px !important;
@@ -493,7 +534,7 @@ a{
 
 /* The list of options */
 .select2-container--default .select2-results__options {
-  max-height: 250px;  /* scroll if too long */
+  max-height: 250px;
   overflow-y: auto;
   font-size: 10px !important;
   text-align: right !important;
@@ -508,19 +549,11 @@ a{
 
 /* For single-select placeholders */
 .select2-container--default .select2-selection--single .select2-selection__placeholder {
-  color: #000 !important; /* Change to black */
+  color: #000 !important;
 }
 
 /* For the search field placeholder inside the dropdown */
 .select2-container--default .select2-search--dropdown .select2-search__field::placeholder {
-  color: #000 !important; /* Change to black */
-}
-
-/* For cross-browser support, include these if needed: */
-.select2-container--default .select2-search--dropdown .select2-search__field:-ms-input-placeholder {
-  color: #000 !important;
-}
-.select2-container--default .select2-search--dropdown .select2-search__field::-ms-input-placeholder {
   color: #000 !important;
 }
 
@@ -531,6 +564,7 @@ a{
   align-items: center;
   margin-bottom: 5px;
 }
+
 /* Inline grouping for cargo items */
 .inline-group {
   display: flex;
@@ -539,14 +573,96 @@ a{
   align-items: flex-end;
   margin-bottom: 10px;
 }
+
 .inline-group > div {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
+
 /* Styling for each shipment group */
-.shipment{
+.shipment {
   border: 1px solid #ccc;
   padding: 10px;
   margin-bottom: 15px;
+}
+
+.shipment-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.required-asterisk {
+  color: red;
+  margin-left: 4px; 
+  font-weight: bold;
+}
+
+html[dir="rtl"] .required-asterisk {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/* User Dropdown Styles */
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-right: auto; /* Pushes to the left in RTL */
+}
+
+.user-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    background-color: #f9f9f9;
+    min-width: 250px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 5px;
+    text-align: right;
+    direction: rtl;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.user-info {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.user-info p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.logout-btn {
+    color: #e74c3c !important;
+    font-weight: bold;
+}
+
+.logout-btn:hover {
+    background-color: #f1f1f1;
+}
+
+/* Show the dropdown when active */
+.show-dropdown {
+    display: block;
 }

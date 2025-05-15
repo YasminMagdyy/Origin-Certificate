@@ -1,8 +1,7 @@
-from django.db import models
-from djmoney.models.fields import MoneyField
+from django.db import models 
 from djmoney.money import Money
+from django.contrib.auth.models import User
 
-# Predefined choices for quantity unit
 QUANTITY_UNIT_CHOICES = [
     ('طن', 'طن'),
     ('كجم', 'كجم'),
@@ -11,16 +10,36 @@ QUANTITY_UNIT_CHOICES = [
 
 class Office(models.Model):
     OfficeName = models.CharField(max_length=100, blank=True, null=True)
-    # BranchName = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f"{self.OfficeName}"
+
+class Branch(models.Model):
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return f"{self.name}"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
+    is_branch_admin = models.BooleanField(default=False)
+    is_branch_user = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.branch.name if self.branch else 'No Branch'}"
+    
+    def get_branch(self):
+        return self.branch
 
 class Company(models.Model):
     CompanyName = models.CharField(max_length=100)
     CompanyAddress = models.CharField(max_length=200)
     CompanyType = models.CharField(max_length=50)
     CompanyStatus = models.CharField(max_length=50)
+    importCompanyName = models.CharField(max_length=100, blank=True, null=True)
+    importCompanyAddress = models.CharField(max_length=200, blank=True, null=True)
+    importCompanyPhone = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.CompanyName
@@ -38,10 +57,11 @@ class Cargo(models.Model):
         return self.ExportedGoods
 
 class Certificate(models.Model):
-    # Make Office optional
     Office = models.ForeignKey(Office, on_delete=models.SET_NULL, null=True, blank=True)
+    Branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=False)
+    BranchName = models.CharField(max_length=255)
     Company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    RegistrationNumber = models.CharField(max_length=50, unique=False, blank=True, null=True)
+    RegistrationNumber = models.CharField(max_length=50, blank=True, null=True)
     CertificateNumber = models.CharField(max_length=50, unique=True, blank=True, null=True)
     ExportCountry = models.ForeignKey(
         Country, on_delete=models.CASCADE, related_name='export_country_certificates'
@@ -49,44 +69,39 @@ class Certificate(models.Model):
     OriginCountry = models.ForeignKey(
         Country, on_delete=models.CASCADE, related_name='origin_country_certificates'
     )
-    ExportedGoods = models.ForeignKey(
-        Cargo, on_delete=models.CASCADE, related_name='certificates'
-    )
     IssueDate = models.DateField()
     ReceiptNumber = models.CharField(max_length=50, blank=True, null=True)
     ReceiptDate = models.DateField(blank=True, null=True)
     PaymentAmount = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
-    # New fields for quantity and its unit
-    quantity = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True
-    )
     quantity_unit = models.CharField(
-        max_length=10, choices=QUANTITY_UNIT_CHOICES, default='kg'
+        max_length=10, choices=QUANTITY_UNIT_CHOICES, default='كجم'
     )
-    # New cost field using django-money; default currency is set to USD
-    cost = MoneyField(
-        max_digits=10, decimal_places=2, default_currency='USD', blank=True, null=True
-    )
+    default_currency = models.CharField(max_length=3, default='USD')
 
     def __str__(self):
         return f"Certificate {self.id}"
 
     @property
-    def quantity_display(self):
-        """
-        Returns the quantity combined with its unit (e.g. "10 kg").
-        """
-        if self.quantity is not None:
-            return f"{self.quantity} {self.get_quantity_unit_display()}"
-        return ""
+    def total_quantity(self):
+        return sum(sh.quantity for sh in self.shipments.all() if sh.quantity)
 
     @property
-    def cost_display(self):
-        """
-        Returns the cost as a string (e.g. "100.00 USD").
-        """
-        if self.cost is not None:
-            return str(self.cost)
-        return ""
+    def total_cost(self):
+        total = sum(sh.cost_amount for sh in self.shipments.all() if sh.cost_amount)
+        return Money(total, self.default_currency)
+
+class Shipment(models.Model):
+    certificate = models.ForeignKey(
+        Certificate, on_delete=models.CASCADE, related_name='shipments'
+    )
+    cargo = models.ForeignKey(
+        Cargo, on_delete=models.CASCADE,
+        help_text="Select the cargo from the predefined Cargo table."
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Shipment for {self.certificate} - {self.cargo}"

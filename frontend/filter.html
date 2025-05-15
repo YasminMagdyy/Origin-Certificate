@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تصفية</title>
+  <title>بحث</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
@@ -15,23 +15,52 @@
       <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
       <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
     </div>
-
     <div class="navbar-left" dir="rtl">
       <label id="headerLeft2"> Origin Certificate System | </label>
       <label id="headerLeft"> Alexandria Chamber of Commerce </label>
     </div>
-
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="user-dropdown">
+        <button class="user-btn" onclick="toggleDropdown()">
+            <i class="user-icon">👤</i>
+        </button>
+        <div class="dropdown-content" id="userDropdown">
+            <div class="user-info">
+                <p><strong>الاسم:</strong> {{ request.user.get_full_name|default:request.user.username }}</p>
+                {% if request.user.userprofile.branch %}
+                    <p><strong>الفرع:</strong> {{ request.user.userprofile.branch.name }}</p>
+                {% endif %}
+                <p><strong>الدور:</strong> 
+                    {% if request.user.is_superuser %}
+                        المشرف العام
+                    {% elif request.user.userprofile.is_branch_admin %}
+                        مدير الفرع
+                    {% else %}
+                        مستخدم
+                    {% endif %}
+                </p>
+            </div>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" style="background: none; border: none; cursor: pointer;">
+                    <i class="logout-icon">🚪</i> تسجيل الخروج
+                </button>
+            </form>
+        </div>
+    </div>
   </nav>
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
     <a href="{% url 'index' %}">الصفحه الرئيسيه</a>
-    <a href="{% url 'filter' %}">تصفيه</a>
+    <a href="{% url 'filter' %}">بحث</a>
     <a href="{% url 'cargo' %}">البضائع</a>
     <a href="{% url 'country' %}">البلد</a>
     <a href="{% url 'report' %}">التقرير</a>
+    {% if request.user.is_superuser or request.user.userprofile.is_branch_admin or request.user.userprofile.is_branch_user %}
+    <a href="/admin/">لوحة التحكم</a>
+    {% endif %}
   </div>
 
   <!-- Main Content Wrapper -->
@@ -41,44 +70,54 @@
       <!-- Edit Modal -->
       <div id="editModal" class="modal">
         <div class="modal-content">
-          <span class="close" onclick="closeEditModal()">&times;</span>
+          <span class="close" onclick="closeEditModal()">×</span>
           <h2>تعديل الشهادة</h2>
-          <form id="editForm">
-            <input type="hidden" id="certificateId" name="certificateId">
+          <form id="editForm" method="post" action="#" onsubmit="submitEditModal(); return false;">
+            <input type="hidden" id="editCertificateId" name="editCertificateId">
             <div class="form-row">
               <!-- First Column -->
               <div class="form-container">
                 <div class="form-group">
-                  <label for="companyStatus">حالة المنشأه:</label>
+                  <label for="branchName">اسم الفرع</label>
+                  <select id="branchName" required>
+                    <option value="" disabled selected>اختر الفرع</option>        
+                    <option value="محطه الرمل">محطه الرمل</option>
+                    <option value="السلطان حسين">السلطان حسين</option>
+                    <option value="الاستثماري">الاستثماري</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="companyStatus">حالة المنشأه</label>
                   <select id="companyStatus" required>
                     <option value="مقيد">مقيد</option>
                     <option value="غير مقيد">غير مقيد</option>
                   </select>
                 </div>    
                 <div class="form-group">
-                  <label for="office">اسم المكتب:</label>
+                  <label for="office">اسم المكتب</label>
                   <select id="office" required>
                     <option value="">اسم المكتب</option>
                     <option value="عام">عام</option>
                     <option value="شرق">شرق</option>
                     <option value="برج العرب">برج العرب</option>
+                    <option value="استثماري">استثماري</option>
+                    <option value="غرفه">غرفه</option>                 
                   </select>
                 </div>
-                
                 <div class="form-group">
-                  <label for="registrationNumber">رقم السجل:</label>
+                  <label for="registrationNumber">رقم السجل</label>
                   <input type="text" id="registrationNumber" placeholder="رقم السجل" required>
                 </div>              
                 <div class="form-group">
-                  <label for="companyName">اسم الشركة:</label>
+                  <label for="companyName">اسم الشركة</label>
                   <input type="text" id="companyName" required>
                 </div>
                 <div class="form-group">
-                  <label for="companyAddress">عنوان الشركة:</label>
+                  <label for="companyAddress">عنوان الشركة</label>
                   <input type="text" id="companyAddress" required>
                 </div>
                 <div class="form-group">
-                  <label for="companyType">نوع الشركة:</label>
+                  <label for="companyType">نوع الشركة</label>
                   <select id="companyType" required>
                     <option value="" disabled selected>اختر نوع الشركه</option>
                     <option value="شركه">شركه</option>
@@ -86,51 +125,44 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="certificateNumber">رقم الشهادة:</label>
+                  <label for="certificateNumber">رقم الشهادة</label>
                   <input type="text" id="certificateNumber" required>
                 </div>
                 <div class="form-group">
-                  <label for="cargo">البضاعه:</label>
-                  <select id="cargo" required>
+                  <label for="exportCountry">بلد التصدير</label>
+                  <select id="exportCountry" required>
+                    <option value="" disabled selected>اختر بلد التصدير</option>
                   </select>
+                  <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
                 </div>
                 <div class="form-group">
-                  <label for="exportCountry">بلد التصدير:</label>
-                  <select id="exportCountry" required>
+                  <label for="originCountry">بلد المنشأ</label>
+                  <select id="originCountry" required>
+                    <option value="مصر" selected>مصر</option>
                   </select>
-                </div>
+                  <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
+                </div>  
               </div>
               <!-- Second Column -->
               <div class="form-container">
                 <div class="form-group">
-                  <label for="originCountry">بلد المنشأ:</label>
-                  <select id="originCountry" required>
-                    <option value="مصر" selected>مصر</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="processDate">تاريخ العملية:</label>
+                  <label for="processDate">تاريخ العملية</label>
                   <input type="date" id="processDate" required>
                 </div>
                 <div class="form-group">
-                  <label for="receiptNumber">رقم الايصال:</label>
+                  <label for="receiptNumber">رقم الايصال</label>
                   <input type="text" id="receiptNumber" required>
                 </div>
                 <div class="form-group">
-                  <label for="receiptDate">تاريخ الايصال:</label>
+                  <label for="receiptDate">تاريخ الايصال</label>
                   <input type="date" id="receiptDate" required>
                 </div>
                 <div class="form-group">
-                  <label for="paymentAmount">القيمة المدفوعة:</label>
+                  <label for="paymentAmount">القيمة المدفوعة</label>
                   <input type="number" id="paymentAmount" required>
                 </div>
-                <!-- New Inputs for Quantity -->
                 <div class="form-group">
-                  <label for="quantity">القيمة (الكمية):</label>
-                  <input type="number" step="0.01" id="quantity" placeholder="أدخل القيمة" required>
-                </div>
-                <div class="form-group">
-                  <label for="quantity_unit">نوع الوحدة:</label>
+                  <label for="quantity_unit">نوع الوحدة (افتراضي الشهادة)</label>
                   <select id="quantity_unit" required>
                     <option value="" disabled selected>اختر نوع الوحدة</option>
                     <option value="طن">طن</option>
@@ -138,47 +170,67 @@
                     <option value="وحده">وحده</option>    
                   </select>
                 </div>
-                <!-- New Inputs for Cost using django-money -->
                 <div class="form-group">
-                  <label for="cost_amount">التكلفة:</label>
-                  <input type="number" step="0.01" id="cost_amount" placeholder="أدخل التكلفة" required>
-                </div>
-                <div class="form-group">
-                  <label for="cost_currency">نوع العملة:</label>
+                  <label for="cost_currency">نوع العملة (افتراضي الشهادة)</label>
                   <select id="cost_currency" required>
                     <option value="" disabled selected>اختر نوع العملة</option>
                     <option value="USD">دولار</option>
                     <option value="EUR">يورو</option>
                     <option value="EGP">جنيه مصري</option>
+                    <option value="GBP">الجنيه الإسترليني</option>
+                    <option value="SAR">ريال سعودي</option>
                   </select>
+                </div>
+                <div class="form-group">
+                  <label for="importCompanyName">اسم الشركه المستورده</label>
+                  <input type="text" id="importCompanyName" placeholder="ادخل اسم الشركه المستورده" required>
+                </div>
+                <div class="form-group">
+                  <label for="importCompanyAddress">عنوان الشركه المستورده</label>
+                  <input type="text" id="importCompanyAddress" placeholder="ادخل عنوان الشركه المستورده" required>
+                </div>
+                <div class="form-group">
+                  <label for="importCompanyPhone">تليفون الشركه المستورده</label>
+                  <input type="text" id="importCompanyPhone" placeholder="ادخل تليفون الشركه المستورده">
+                </div>
+                <!-- Shipments Section -->
+                <div class="CenterContainer">
+                  <div class="form-group">
+                    <label for="shipment">الشحنه</label>
+                    <button type="button" class="add-button" onclick="openModal('cargo')">اضف بضاعه جديده</button>
+                    <button type="button" id="addShipmentGroup" class="add-button">اضف شحنه جديده</button>
+                    <div id="shipmentContainer"></div>
+                  </div>
                 </div>
               </div>
             </div>
-            <button id="modalEditButton" onclick="submitEditModal()">تعديل</button>
+            {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
+            <button id="modalEditButton" type="submit">تعديل</button>          
+            {% endif %}
           </form>
         </div>
       </div>
 
-      <h1>تصفية</h1>
+      <h1>بحث</h1>
       <div class="filter">
         <div class="form-group">
-          <label for="filterOffice">اسم المكتب:</label>
+          <label for="filterOffice">اسم المكتب</label>
           <select id="filterOffice">
             <option value="">اختر مكتب</option>
             <option value="عام">عام</option>
             <option value="شرق">شرق</option>
             <option value="برج العرب">برج العرب</option>
+            <option value="استثماري">استثماري</option>
+            <option value="غرفه">غرفه</option>                
           </select>
         </div>
         <div class="form-group">
-          <label for="filterRegistrationNumber">رقم السجل:</label>
+          <label for="filterRegistrationNumber">رقم السجل</label>
           <input type="text" id="filterRegistrationNumber" placeholder="ادخل رقم السجل">
         </div>
-        <!-- Search button triggers the JavaScript function -->
         <button id="searchButton" onclick="searchCertificates()">بحث</button>
       </div>
       
-      <!-- Table Div (Below) -->
       <div class="table-container">
         <table id="resultsTable">
           <thead>
@@ -190,6 +242,10 @@
               <th>عنوان الشركة</th>
               <th>حالة المنشأه</th>
               <th>نوع الشركة</th>
+              <th>اسم الفرع</th>
+              <th>اسم الشركه المستورده</th>
+              <th>عنوان الشركه المستورده</th>
+              <th>تليفون الشركه المستورده</th>
               <th>البضاعة</th>
               <th>بلد التصدير</th>
               <th>بلد المنشأ</th>
@@ -199,25 +255,67 @@
               <th>رقم الايصال</th>
               <th class="date-column">تاريخ الايصال</th>
               <th>القيمة المدفوعة</th>
+              <!-- Change the edit/delete button conditions -->
+              {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
               <th>تعديل</th>
               <th>حذف</th>
+            {% endif %}            
             </tr>
           </thead>
           <tbody>
-            <!-- Rows will be added dynamically -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Modal for Adding New Items -->
+      <div id="modal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal()">×</span>
+          <label for="newItem">إضافه عنصر جديد</label>
+          <input type="text" id="newItem" placeholder="ادخل العنصر الجديد">
+          <button type="button" onclick="addItem()">موافق</button>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="footer">
     <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
-      For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
+      For any inquiries, please contact the IT Department via email at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4b223f0b2a272e332a252f39222a6628232a26292e3965282426">[email&#160;protected]</a>.
       Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
       All activities on this platform are monitored and logged for security purposes.</p>
       <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
   </div>
+
+  <!-- Shipment Template -->
+  <template id="shipmentTemplate">
+    <div class="shipment-group">
+      <div class="form-group inline-group">
+        <div>
+          <label>البضاعه</label>
+          <select class="cargo" required>
+            <option value="" disabled selected>اختر البضاعة</option>
+          </select>
+        </div>
+        <div>
+          <label>الكميه</label>
+          <input type="number" step="0.01" class="quantity" placeholder="أدخل القيمة" required>
+        </div>
+        <div>
+          <label>التكلفه</label>
+          <input type="number" step="0.01" class="cost_amount" placeholder="أدخل التكلفة" required>
+        </div>
+        <button type="button" class="removeShipment">حذف</button>
+      </div>
+    </div>
+  </template>
+
+  {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
+  <script>window.isBranchAdmin = true;</script>
+{% else %}
+  <script>window.isBranchAdmin = false;</script>
+{% endif %}
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script src="{% static 'script.js' %}"></script>
 </body>
 </html>

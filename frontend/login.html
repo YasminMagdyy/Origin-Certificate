@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --error-color: #ef233c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('{% static "Alex Chamber.jpeg" %}');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            transition: all 0.5s ease;
+        }
+
+        .login-container:hover {
+            transform: perspective(1000px) rotateY(5deg);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            outline: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            background: rgba(239, 35, 60, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid var(--error-color);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 42px;
+            color: #6c757d;
+        }
+
+        /* Floating animation for the container */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .login-container {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .login-container {
+                width: 90%;
+                padding: 30px 20px;
+            }
+        }
+        .login-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #6c757d;
+    font-size: 14px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.footer-logo {
+    animation: pulse 2s infinite;
+}
+.footer-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Logo">
+            <h2>نظام شهادة المصدر</h2>
+            <p>الغرفة التجارية المصرية بالاسكندرية</p>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="أدخل اسم المستخدم" required>
+                <i class="fas fa-user input-icon"></i>
+            </div>
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="أدخل كلمة المرور" required>
+                <i class="fas fa-lock input-icon"></i>
+            </div>
+            <button type="submit" class="btn-primary">تسجيل الدخول</button>
+        </form>
+
+<div class="login-footer">
+    <div class="footer-content">
+        <img src="{% static 'ACOC.png' %}" alt="IT Department Logo" class="footer-logo">
+        <div class="footer-text">
+            <p>للحصول على مساعدة</p>
+            <p class="contact-info">
+                <i class="fas fa-envelope"></i> it@example.com
+            </p>
+        </div>
+    </div>
+</div>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>

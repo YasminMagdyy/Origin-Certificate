@@ -19,13 +19,17 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
+    path('', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html')),
     path('', TemplateView.as_view(template_name='filter.html')),
     path("", include("certificate_app.urls")),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
 
 # Serve static files during development

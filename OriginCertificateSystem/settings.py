@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'certificate_app',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -76,8 +77,12 @@ WSGI_APPLICATION = 'OriginCertificateSystem.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'origin certificate',  # Database name in pgAdmin
+        'USER': 'Super Admin',            # Or 'django_user' if you created one
+        'PASSWORD': '1234Admin',    # Password you set
+        'HOST': 'localhost',           # PostgreSQL server (localhost if on same machine)
+        'PORT': '5432',                # Default PostgreSQL port
     }
 }
 
@@ -123,3 +128,23 @@ STATICFILES_DIRS = [BASE_DIR / 'frontend']
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Custom admin site header
+ADMIN_SITE_HEADER = "Origin Certificate System Administration"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+
+ADMIN_SITE_HEADER = "Origin Certificate System Administration"
+
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = 'index'  # Where to redirect after login
+LOGOUT_REDIRECT_URL = '/login/'  # Where to redirect after logout
+
+# Session settings (important for keeping users logged in)
+SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_SAVE_EVERY_REQUEST = True
