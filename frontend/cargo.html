@@ -6,71 +6,75 @@
   <title>البلد</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar">
     <div class="navbar-right" dir="ltr">
-      <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label>
+      <!-- <label id="headerRight2">نظام شهادة المصدر والمنشأ | </label> -->
       <label id="headerRight"> الغرفة التجارية المصرية بالاسكندرية </label>
       <img src="{% static 'ACOC_Logo_Final[1].png' %}" alt="Company Logo" class="logo">
     </div>
     <div class="navbar-left" dir="rtl">
-      <label id="headerLeft2"> Origin Certificate System | </label>
       <label id="headerLeft"> Alexandria Chamber of Commerce </label>
+      <label id="headerLeft2"> Origin Certificate System </label>
     </div>
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-        <div class="user-dropdown">
-        <button class="user-btn" onclick="toggleDropdown()">
-            <i class="user-icon">👤</i>
-        </button>
-        <div class="dropdown-content" id="userDropdown">
-            <div class="user-info">
-                <p><strong>الاسم:</strong> {{ request.user.get_full_name|default:request.user.username }}</p>
-                {% if request.user.userprofile.branch %}
-                    <p><strong>الفرع:</strong> {{ request.user.userprofile.branch.name }}</p>
-                {% endif %}
-                <p><strong>الدور:</strong> 
-                    {% if request.user.is_superuser %}
-                        المشرف العام
-                    {% elif request.user.userprofile.is_branch_admin %}
-                        مدير الفرع
-                    {% else %}
-                        مستخدم
-                    {% endif %}
-                </p>
-            </div>
-            <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn" style="background: none; border: none; cursor: pointer;">
-                    <i class="logout-icon">🚪</i> تسجيل الخروج
-                </button>
-            </form>
-        </div>
+<div class="user-dropdown">
+  <button class="user-btn" onclick="toggleDropdown()">
+    <span class="user-icon">👤</span>
+    <span class="user-name">{{ request.user.get_full_name|default:request.user.username|truncatechars:12 }}</span>
+  </button>
+  <div class="dropdown-content" id="userDropdown">
+    <div class="user-info">
+      <p><strong>الاسم:</strong> {{ request.user.get_full_name|default:request.user.username }}</p>
+      {% if request.user.userprofile.branch %}
+        <p><strong>الفرع:</strong> {{ request.user.userprofile.branch.name }}</p>
+      {% endif %}
+      <p><strong>الدور:</strong> 
+        {% if request.user.is_superuser %}
+          المشرف العام
+        {% elif request.user.userprofile.is_branch_admin %}
+          مدير الفرع
+        {% else %}
+          مستخدم
+        {% endif %}
+      </p>
     </div>
-  </nav>
-  
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
-    <a href="{% url 'index' %}">الصفحة الرئيسية</a>
-    <a href="{% url 'filter' %}">بحث</a>
-    <a href="{% url 'cargo' %}">البضائع</a>
-    <a href="{% url 'country' %}">البلد</a>
-    <a href="{% url 'report' %}">التقرير</a>
+    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <span>تسجيل الخروج</span>
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </form>
   </div>
+</div>
+</nav>
+
+  <!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">✖</a>
+    <a href="{% url 'index' %}"><i class="fas fa-home"></i> الصفحة الرئيسية</a>
+    <a href="{% url 'filter' %}"><i class="fas fa-search"></i> بحث</a>
+    <a href="{% url 'cargo' %}"><i class="fas fa-boxes"></i> البضائع</a>
+    <a href="{% url 'country' %}"><i class="fas fa-globe"></i> البلد</a>
+    <a href="{% url 'report' %}"><i class="fas fa-chart-bar"></i> التقرير</a>
+</div>
   
   <!-- Content Wrapper -->
   <div class="content-wrapper">
     <!-- Page Content -->
     <div class="container">
-      <h1>البضائع</h1>
+      <h1 class="centered-title">البضائع</h1>
       <!-- Table Div -->
       <div class="table-container">
         <table id="resultsTable">
           <thead>
             <tr>
               <th>البضائع</th>
-              {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
+              {% if request.user.is_superuser %}
               <th>الإجراءات</th>
             {% endif %}            
             </tr>
@@ -79,7 +83,7 @@
             {% for cargo in cargos %}
               <tr data-cargo-id="{{ cargo.id }}">
                 <td>{{ cargo.ExportedGoods }}</td>
-                {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
+                {% if request.user.is_superuser %}
                 <td class="actions-cell">
                   <button onclick="editCargo({{ cargo.id }}, '{{ cargo.ExportedGoods }}')">تعديل</button>
                 </td>
@@ -97,10 +101,8 @@
   </div>
   
   <div class="footer">
-    <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. 
-      For any inquiries, please contact the IT Department via email at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="733a0733121f160b121d17011a125e101b121e1116015d101c1e">[email&#160;protected]</a>.
-      Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. 
-      All activities on this platform are monitored and logged for security purposes.</p>
+    <p>This website and system have been developed by the Alexandria Chamber of Commerce IT Department. For any inquiries, please contact the IT Department via email at it@alexandria-chamber.com.
+Unauthorized access, misuse, or any illegal activities related to this system are strictly prohibited and may result in legal action. All activities on this platform are monitored and logged for security purposes.</p>
       <img src="{% static 'ACOC.png' %}" alt="Footer Image" class="footer-img">
   </div>
   {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
