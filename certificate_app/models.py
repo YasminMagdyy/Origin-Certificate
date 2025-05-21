@@ -62,7 +62,7 @@ class Certificate(models.Model):
     BranchName = models.CharField(max_length=255)
     Company = models.ForeignKey(Company, on_delete=models.CASCADE)
     RegistrationNumber = models.CharField(max_length=50, blank=True, null=True)
-    CertificateNumber = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    CertificateNumber = models.CharField(max_length=50, blank=True, null=True)
     ExportCountry = models.ForeignKey(
         Country, on_delete=models.CASCADE, related_name='export_country_certificates'
     )
@@ -91,6 +91,15 @@ class Certificate(models.Model):
     def total_cost(self):
         total = sum(sh.cost_amount for sh in self.shipments.all() if sh.cost_amount)
         return Money(total, self.default_currency)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['Branch', 'Office', 'RegistrationNumber', 'CertificateNumber'],
+                name='unique_branch_office_reg_cert',
+                condition=~models.Q(RegistrationNumber='غير موجود')
+            )
+        ]
 
 class Shipment(models.Model):
     certificate = models.ForeignKey(

@@ -220,16 +220,20 @@ def get_company_data(request):
 
     try:
         query = Certificate.objects.filter(
+            Branch=branch,
             Office__OfficeName=office,
             RegistrationNumber=registration_number
         )
         
-        if branch:
-            query = query.filter(Branch=branch)
-            
         certificate = query.first()
         if not certificate:
             return JsonResponse({'error': 'Company not found'}, status=404)
+            
+        # Additional check - if there are multiple certificates with same criteria
+        if query.count() > 1:
+            return JsonResponse({
+                'error': 'يوجد أكثر من شهادة بنفس بيانات الفرع والمكتب ورقم السجل. يرجى التواصل مع المسؤول.'
+            }, status=400)
             
         company = certificate.Company
         data = {
@@ -285,6 +289,22 @@ def save_certificate(request):
         branch_name = branch.name if branch else normalize_text(data.get('branchName', ''))
         company_status = normalize_text(data.get('companyStatus'))
         registration_number = "غير موجود" if company_status == 'غير مقيد' else normalize_text(data.get('registrationNumber', ''))
+        certificate_number = normalize_text(data['certificateNumber'])
+
+        # Check for existing certificate with same branch, office, registration and certificate number
+        if company_status == 'مقيد' and registration_number and registration_number != "غير موجود":
+            existing_cert = Certificate.objects.filter(
+                Branch=branch,
+                Office__OfficeName=office_name,
+                RegistrationNumber=registration_number,
+                CertificateNumber=certificate_number
+            ).first()
+            
+            if existing_cert:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع والمكتب ورقم السجل ورقم الشهادة. يرجى التحقق من البيانات.'
+                }, status=400)
 
         # Handle office
         if company_status == 'مقيد' and office_name:
@@ -320,7 +340,7 @@ def save_certificate(request):
             BranchName=branch_name,
             Company=company,
             RegistrationNumber=registration_number,
-            CertificateNumber=normalize_text(data['certificateNumber']),
+            CertificateNumber=certificate_number,
             ExportCountry=export_country,
             OriginCountry=origin_country,
             IssueDate=data['processDate'],
@@ -370,7 +390,7 @@ def save_certificate(request):
             'status': 'success',
             'message': 'Certificate saved successfully!',
             'certificateId': certificate.id,
-            'branchName': certificate.Branch.name if certificate.Branch else certificate.BranchName,  # Add saved branch name
+            'branchName': certificate.Branch.name if certificate.Branch else certificate.BranchName,
             'shipments': saved_shipments,
             'total_quantity': float(certificate.total_quantity or 0),
             'total_cost': float(certificate.total_cost.amount or 0),
@@ -424,15 +444,10 @@ def update_certificate(request, certificate_id):
                 status=403
             )
 
-        # Update certificate fields
-        certificate.CertificateNumber = normalize_text(data['certificateNumber'])
-        certificate.quantity_unit = data.get('quantity_unit', certificate.quantity_unit)
-        certificate.default_currency = data.get('cost_currency', certificate.default_currency)
-        
         # Handle RegistrationNumber based on companyStatus
         company_status = normalize_text(data['companyStatus'])
         if company_status == 'غير مقيد':
-            certificate.RegistrationNumber = "غير موجود"
+            registration_number = "غير موجود"
         else:
             registration_number = normalize_text(data.get('registrationNumber', ''))
             if not registration_number:
@@ -440,7 +455,29 @@ def update_certificate(request, certificate_id):
                     {'status': 'error', 'message': 'RegistrationNumber is required for مقيد status'},
                     status=400
                 )
-            certificate.RegistrationNumber = registration_number
+
+        certificate_number = normalize_text(data['certificateNumber'])
+
+        # Check for duplicates when updating
+        if company_status == 'مقيد' and registration_number and registration_number != "غير موجود":
+            existing_cert = Certificate.objects.filter(
+                Branch=branch,
+                Office__OfficeName=normalize_text(data.get('office', '')),
+                RegistrationNumber=registration_number,
+                CertificateNumber=certificate_number
+            ).exclude(id=certificate_id).first()
+            
+            if existing_cert:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع والمكتب ورقم السجل ورقم الشهادة. يرجى التحقق من البيانات.'
+                }, status=400)
+
+        # Update certificate fields
+        certificate.CertificateNumber = certificate_number
+        certificate.quantity_unit = data.get('quantity_unit', certificate.quantity_unit)
+        certificate.default_currency = data.get('cost_currency', certificate.default_currency)
+        certificate.RegistrationNumber = registration_number
 
         # Handle office
         if company_status == 'غير مقيد':
@@ -468,7 +505,6 @@ def update_certificate(request, certificate_id):
             }
         )
         if not created:
-            # Update all fields for existing company
             company.CompanyAddress = normalize_text(data.get('companyAddress', ''))
             company.CompanyType = normalize_text(data['companyType'])
             company.CompanyStatus = company_status

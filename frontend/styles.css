@@ -1,7 +1,17 @@
 /* General Styles */
+@font-face {
+  font-family: 'YaModernPro-Bold';
+  src: url('fonts/alfont_com_Ya-ModernPro-Bold.otf') format('opentype'),
+       url('fonts/alfont_com_Ya-ModernPro-Bold.woff2') format('woff2'),
+       url('fonts/alfont_com_Ya-ModernPro-Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
 * {
     font-family: 'Tajawal', sans-serif;
 }
+
 html, body {
   /* font-family: 'Cairo', sans-serif; */
   direction: rtl; /* Right-to-left for Arabic */
@@ -198,17 +208,57 @@ html, body {
 }
 
 .centered-title {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'YaModernPro-Bold', 'Tajawal', sans-serif;
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 700;  font-style: italic;
   color: #13679f;
   text-align: center;
   direction: rtl;
-  margin-top: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
+  margin: 40px 0;
+  position: relative;
+  perspective: 500px;  
+  /* Gradient Text Color */
+  background: linear-gradient(135deg, #13679f 0%, #1a8fd3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* Border effect */
+  padding: 0 15px;
+  transform: rotateX(5deg) rotateY(-5deg);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.centered-title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  transform: translateZ(-10px);
+  z-index: -1;
+  border-radius: 5px;
+  filter: blur(2px);
+}
+/* Optional: Add decorative elements */
+.centered-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 25%;
+  width: 50%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #f39c12, transparent);
+  transform: perspective(100px) rotateX(45deg);
+  opacity: 0.8;
+  transition: all 0.4s ease;
+}
+
+.centered-title:hover::after {
+  width: 60%;
+  background: linear-gradient(90deg, transparent, #f39c12, #e74c3c, transparent);
 }
 
 .centered-title .title-icon {
@@ -344,7 +394,6 @@ h1 {
   font-weight: bold;
   margin-bottom: 10px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 1px;
   padding-bottom: 5px;
 }
 
@@ -450,7 +499,7 @@ button:hover {
   z-index: 1;
 }
 .table-container th {
-  background-color: #3190d0;
+  background-color: #2d78ab;
 }
 table {
   width: 100%;
@@ -467,7 +516,7 @@ table td {
 }
 
 table th {
-  background-color: #3190d0;
+  background-color: #2d78ab;
   color: white;
   font-size: 14px;
   white-space: nowrap;
@@ -660,9 +709,11 @@ a {
 }
 
 .footer {
+  direction: ltr; /* Force left-to-right */
+  text-align: left; /* Align text to the left */
+  /* Keep your existing styles */
   width: 96%;
-  /* background-color: #c6d0de; */
-  background: linear-gradient(90deg, #2C3E50, #3498DB); /* Gradient from dark blue-gray to blue */
+  background: linear-gradient(90deg, #2C3E50, #3498DB);
   color: white;
   font-size: 15px;
   padding: 2%;
@@ -672,13 +723,17 @@ a {
   justify-content: space-between;
 }
 
+/* If you have specific elements inside the footer that need adjustment */
 .footer p {
-  direction: ltr;
+  direction: ltr; /* Ensure text direction is LTR */
+  text-align: left; /* Explicit left alignment */
   margin: 0;
   flex: 1;
 }
 
 .footer-img {
+  /* If your image needs to be on the right side */
+  order: 1; /* This will move it to the right in flex container */
   height: 80%;
   margin-left: 10px;
   margin-right: 10px;
@@ -991,4 +1046,79 @@ html[dir="rtl"] .required-asterisk {
 
 .show-dropdown {
   animation: fadeInDropdown 0.3s ease forwards;
+}
+/* Centered Alert Styles */
+.centered-alert {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 30px;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  min-width: 300px;
+  max-width: 80%;
+  text-align: center;
+}
+
+.centered-alert.success {
+  background-color: #4CAF50;
+}
+
+.centered-alert.error {
+  background-color: #F44336;
+}
+
+.centered-alert .alert-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.centered-alert i {
+  font-size: 1.2em;
+}
+
+.centered-alert.fade-out {
+  opacity: 0;
+}
+
+/* Animation for new alerts */
+@keyframes slideIn {
+  from {
+    transform: translate(-50%, -40%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+.centered-alert {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* For the error fields */
+.error-field {
+  border: 2px solid #F44336 !important;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+/* Loading spinner */
+.fa-spinner.fa-spin {
+  margin-left: 8px;
 }

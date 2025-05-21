@@ -203,7 +203,6 @@ document.getElementById('companyStatus').addEventListener('change', function() {
 });
 
 // Save/Update Certificate
-// script.js
 document.getElementById('saveButton').addEventListener('click', function () {
   const rightForm = document.getElementById('rightForm');
   const leftForm = document.getElementById('leftForm');
@@ -213,6 +212,12 @@ document.getElementById('saveButton').addEventListener('click', function () {
     leftForm.reportValidity();
     return;
   }
+
+  // Show loading state
+  const saveButton = document.getElementById('saveButton');
+  const originalButtonText = saveButton.innerHTML;
+  saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+  saveButton.disabled = true;
 
   window.mode = "save"; // Ensure mode is "save" for new certificates
   const isUnregistered = document.getElementById('companyStatus').value === 'غير مقيد';
@@ -241,13 +246,19 @@ document.getElementById('saveButton').addEventListener('click', function () {
     const cargoVal = group.querySelector('.cargo').value;
     const quantityVal = parseFloat(group.querySelector('.quantity').value) || 0;
     const costVal = parseFloat(group.querySelector('.cost_amount').value) || 0;
-    if (cargoVal && quantityVal > 0 && costVal > 0) {
-      shipments.push({ cargo: cargoVal, quantity: quantityVal, cost_amount: costVal });
+    if (cargoVal && (quantityVal > 0 || costVal > 0)) {
+      shipments.push({ 
+        cargo: cargoVal, 
+        quantity: quantityVal, 
+        cost_amount: costVal 
+      });
     }
   });
 
   if (shipments.length === 0) {
-    alert('يرجى إضافة شحنة واحدة على الأقل تحتوي على بضاعة وكمية وتكلفة صالحة.');
+    showCenteredAlert('يرجى إضافة شحنة واحدة على الأقل تحتوي على بضاعة وكمية أو تكلفة صالحة.', 'error');
+    saveButton.innerHTML = originalButtonText;
+    saveButton.disabled = false;
     return;
   }
 
@@ -288,22 +299,36 @@ document.getElementById('saveButton').addEventListener('click', function () {
     },
     body: JSON.stringify(data),
   })
-  .then(response => {
+  .then(async response => {
+    const responseData = await response.json().catch(() => ({}));
+    
     if (!response.ok) {
-      return response.json().then(errorData => { throw new Error(errorData.message || 'An error occurred'); });
+      // Handle specific error cases
+      if (responseData.message && responseData.message.includes('يوجد بالفعل شهادة')) {
+        return Promise.reject({ 
+          type: 'DUPLICATE_CERTIFICATE',
+          message: responseData.message
+        });
+      }
+      return Promise.reject({
+        type: 'SERVER_ERROR',
+        message: responseData.message || 'حدث خطأ في الخادم',
+        status: response.status
+      });
     }
-    return response.json();
+    return responseData;
   })
   .then(respData => {
     if (respData.status === 'success') {
-      certificateId = respData.certificateId;
-      alert('تم الحفظ بنجاح!');
-      document.getElementById('saveButton').innerHTML = 'حفظ';
+      const certificateId = respData.certificateId;
+      
+      // Show success message
+      showCenteredAlert('تم الحفظ بنجاح!', 'success');
 
       const formData = {
         id: certificateId,
         office: office,
-        branchName: respData.branchName, // Use server’s branchName
+        branchName: respData.branchName || branchName,
         registrationNumber: registrationNumber,
         certificateNumber: certificateNumber,
         companyName: companyName,
@@ -319,27 +344,83 @@ document.getElementById('saveButton').addEventListener('click', function () {
         receiptNumber: receiptNumber,
         receiptDate: receiptDate,
         paymentAmount: paymentAmount,
-        shipments: Array.isArray(respData.shipments) ? respData.shipments : [],
-        quantity: typeof respData.total_quantity === 'number' ? respData.total_quantity : 0,
-        cost: typeof respData.total_cost === 'number' ? respData.total_cost : 0,
-        quantity_unit: respData.quantity_unit || 'كجم',
-        currency: respData.currency || 'USD'
+        shipments: Array.isArray(respData.shipments) ? respData.shipments : shipments,
+        quantity: typeof respData.total_quantity === 'number' ? respData.total_quantity : 
+                 shipments.reduce((sum, s) => sum + s.quantity, 0),
+        cost: typeof respData.total_cost === 'number' ? respData.total_cost : 
+              shipments.reduce((sum, s) => sum + s.cost_amount, 0),
+        quantity_unit: respData.quantity_unit || quantityUnit,
+        currency: respData.currency || costCurrency
       };
+      
       createCertificateTable(formData);
     } else {
-      alert('حدث خطأ أثناء الحفظ: ' + respData.message);
+      throw {
+        type: 'VALIDATION_ERROR',
+        message: respData.message || 'حدث خطأ أثناء الحفظ'
+      };
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    if (error.message.includes('403')) {
-      alert('ليس لديك الصلاحية لحفظ الشهادة. يرجى التواصل مع المسؤول.');
-    } else {
-      alert('حدث خطأ أثناء الاتصال بالخادم: ' + error.message);
+    
+    let errorMessage = 'حدث خطأ غير متوقع';
+    
+    if (error.type === 'DUPLICATE_CERTIFICATE') {
+      errorMessage = error.message;
+      
+      // Highlight conflicting fields
+      document.getElementById('branchName').classList.add('error-field');
+      document.getElementById('office').classList.add('error-field');
+      document.getElementById('registrationNumber').classList.add('error-field');
+      document.getElementById('certificateNumber').classList.add('error-field');
+      
+      setTimeout(() => {
+        document.getElementById('branchName').classList.remove('error-field');
+        document.getElementById('office').classList.remove('error-field');
+        document.getElementById('registrationNumber').classList.remove('error-field');
+        document.getElementById('certificateNumber').classList.remove('error-field');
+      }, 3000);
+    } 
+    else if (error.status === 403) {
+      errorMessage = 'ليس لديك الصلاحية لحفظ الشهادة. يرجى التواصل مع المسؤول.';
     }
+    else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    // Show error message
+    showCenteredAlert(errorMessage, 'error');
+  })
+  .finally(() => {
+    saveButton.innerHTML = originalButtonText;
+    saveButton.disabled = false;
   });
 });
 
+// Helper function to show centered alerts
+function showCenteredAlert(message, type) {
+  // Remove any existing alerts first
+  const existingAlerts = document.querySelectorAll('.centered-alert');
+  existingAlerts.forEach(alert => alert.remove());
+
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `centered-alert ${type}`;
+  alertDiv.innerHTML = `
+    <div class="alert-content">
+      <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(alertDiv);
+  
+  // Auto-dismiss after 3 seconds
+  setTimeout(() => {
+    alertDiv.classList.add('fade-out');
+    setTimeout(() => alertDiv.remove(), 500);
+  }, 3000);
+}
 function createCertificateTable(formData) {
   console.log('Creating table with data:', formData);
 
