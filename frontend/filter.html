@@ -6,6 +6,7 @@
   <title>بحث</title>
   {% load static %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'styles.css' %}">
 </head>
 <body>
@@ -130,17 +131,21 @@
                 </div>
                 <div class="form-group">
                   <label for="exportCountry">بلد التصدير</label>
-                  <select id="exportCountry" required>
-                    <option value="" disabled selected>اختر بلد التصدير</option>
-                  </select>
-                  <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
+                  <div class="search-select-container" style="width: 100%;">
+                    <select id="exportCountry" class="search-select" required>
+                      <option value=""></option>
+                    </select>
+                    <button type="button" class="add-button" onclick="openModal('exportCountry')">+</button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="originCountry">بلد المنشأ</label>
-                  <select id="originCountry" required>
-                    <option value="مصر" selected>مصر</option>
-                  </select>
-                  <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
+                  <div class="search-select-container">
+                    <select id="originCountry" class="search-select" required>
+                      <option value="مصر" selected>مصر</option>
+                    </select>
+                    <button type="button" class="add-button" onclick="openModal('originCountry')">+</button>
+                  </div>
                 </div>  
               </div>
               <!-- Second Column -->
@@ -287,34 +292,39 @@ Unauthorized access, misuse, or any illegal activities related to this system ar
   </div>
 
   <!-- Shipment Template -->
-  <template id="shipmentTemplate">
-    <div class="shipment-group">
-      <div class="form-group inline-group">
-        <div>
-          <label>البضاعه</label>
-          <select class="cargo" required>
+<template id="shipmentTemplate">
+  <div class="shipment-group">
+    <div class="form-group inline-group">
+      <div>
+        <label>البضاعه</label>
+        <div class="search-select-container">
+          <select class="cargo search-select" required>
             <option value="" disabled selected>اختر البضاعة</option>
           </select>
         </div>
-        <div>
-          <label>الكميه</label>
-          <input type="number" step="0.01" class="quantity" placeholder="أدخل القيمة" required>
-        </div>
-        <div>
-          <label>التكلفه</label>
-          <input type="number" step="0.01" class="cost_amount" placeholder="أدخل التكلفة" required>
-        </div>
-        <button type="button" class="removeShipment">حذف</button>
       </div>
+      <div>
+        <label>الكميه</label>
+        <input type="number" step="0.01" class="quantity" placeholder="أدخل القيمة" required>
+      </div>
+      <div>
+        <label>التكلفه</label>
+        <input type="number" step="0.01" class="cost_amount" placeholder="أدخل التكلفة" required>
+      </div>
+      <button type="button" class="removeShipment">حذف الشحنة</button>
     </div>
-  </template>
+  </div>
+</template>
 
   {% if request.user.is_superuser or request.user.userprofile.is_branch_admin %}
   <script>window.isBranchAdmin = true;</script>
 {% else %}
   <script>window.isBranchAdmin = false;</script>
 {% endif %}
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/i18n/ar.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script src="{% static 'script.js' %}"></script>
 </body>
 </html>

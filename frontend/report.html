@@ -208,56 +208,57 @@
       <div class="container">
          <h1 class="centered-title">
 تقرير الشهادات</h1>
-         <form method="get" action="{% url 'report' %}" id="reportForm">
-            <div class="form-group">
-               <label for="branchName">اسم الفرع:</label>
-               <select id="branchName" name="branch_name">
-                  <option value="" {% if not branch_name %}selected{% endif %}>اختر الفرع</option>
-                  <option value="محطه الرمل" {% if branch_name == "محطه الرمل" %}selected{% endif %}>محطه الرمل</option>
-                  <option value="السلطان حسين" {% if branch_name == "السلطان حسين" %}selected{% endif %}>السلطان حسين</option>
-                  <option value="الاستثماري" {% if branch_name == "الاستثماري" %}selected{% endif %}>الاستثماري</option>
-               </select>
+        <form method="get" action="{% url 'report' %}" id="reportForm">
+    <div class="form-group">
+        <label for="branchName">اسم الفرع:</label>
+       <select id="branchName" name="branch_name" {% if not request.user.is_superuser %}disabled{% endif %}>
+    <option value="" {% if not branch_name %}selected{% endif %}>اختر الفرع</option>
+    <option value="محطه الرمل" {% if branch_name == "محطه الرمل" or request.user.userprofile.branch.name == "محطه الرمل" %}selected{% endif %}>محطه الرمل</option>
+    <option value="السلطان حسين" {% if branch_name == "السلطان حسين" or request.user.userprofile.branch.name == "السلطان حسين" %}selected{% endif %}>السلطان حسين</option>
+    <option value="الاستثماري" {% if branch_name == "الاستثماري" or request.user.userprofile.branch.name == "الاستثماري" %}selected{% endif %}>الاستثماري</option>
+</select>
+    </div>
+    <div class="form-group">
+        <label for="process_date_from">تاريخ العملية من:</label>
+        <input type="date" id="process_date_from" name="process_date_from" value="{{ process_date_from }}">
+    </div>
+    <div class="form-group">
+        <label for="process_date_to">تاريخ العملية إلى:</label>
+        <input type="date" id="process_date_to" name="process_date_to" value="{{ process_date_to }}">
+    </div>
+    <div class="form-group">
+        <label for="export_country">بلد التصدير:</label>
+        <div class="input-wrapper">
+            <input type="text" id="countrySearch" placeholder="ابحث عن بلد..." 
+                   onkeyup="searchCountries(this.value)" onfocus="searchCountries('')" 
+                   value="{{ selected_country }}" autocomplete="off">
+            <span class="remove-country" onclick="clearCountry()" style="display: none;">×</span>
+        </div>
+        <input type="hidden" name="export_country" id="export_country_hidden" value="{{ selected_country }}">
+        <div id="countrySuggestions" class="suggestions" style="display: none;"></div>
+    </div>
+    <div class="form-group">
+        <label for="cargo">البضاعة:</label>
+        <div class="cargo-selection">
+            <div class="input-wrapper">
+                <input type="text" id="cargoSearch" placeholder="ابحث عن بضاعة..." 
+                       onkeyup="debouncedSearchCargos(this.value)" onfocus="searchCargos('')" autocomplete="off">
             </div>
-            <div class="form-group">
-               <label for="process_date_from">تاريخ العملية من:</label>
-               <input type="date" id="process_date_from" name="process_date_from" value="{{ process_date_from }}">
-            </div>
-            <div class="form-group">
-               <label for="process_date_to">تاريخ العملية إلى:</label>
-               <input type="date" id="process_date_to" name="process_date_to" value="{{ process_date_to }}">
-            </div>
-            <div class="form-group">
-               <label for="export_country">بلد التصدير:</label>
-               <div class="input-wrapper">
-                  <input type="text" id="countrySearch" placeholder="ابحث عن بلد..." 
-                         onkeyup="searchCountries(this.value)" onfocus="searchCountries('')" 
-                         value="{{ selected_country }}" autocomplete="off">
-                  <span class="remove-country" onclick="clearCountry()" style="display: none;">×</span>
-               </div>
-               <input type="hidden" name="export_country" id="export_country_hidden" value="{{ selected_country }}">
-               <div id="countrySuggestions" class="suggestions" style="display: none;"></div>
-            </div>
-            <div class="form-group">
-               <label for="cargo">البضاعة:</label>
-               <div class="cargo-selection">
-                  <div class="input-wrapper">
-                     <input type="text" id="cargoSearch" placeholder="ابحث عن بضاعة..." 
-                            onkeyup="debouncedSearchCargos(this.value)" onfocus="searchCargos('')" autocomplete="off">
-                  </div>
-                  <div id="cargoSuggestions" class="suggestions" style="display: none;"></div>
-                  <button type="button" onclick="addCargoFromSearch()">إضافة</button>
-               </div>
-               <div class="selected-cargos">
-                  <ul id="selectedCargosList">
-                     {% for cargo in selected_cargos %}
-                     <li data-id="{{ cargo.id }}">{{ cargo.ExportedGoods }} <span class="remove-cargo" onclick="removeCargo(this)">×</span></li>
-                     {% endfor %}
-                  </ul>
-                  <input type="hidden" name="cargo_ids" id="cargoIdsInput" value="{{ selected_cargo_ids|join:',' }}">
-               </div>
-            </div>
-            <button type="submit">موافق</button>
-         </form>
+            <div id="cargoSuggestions" class="suggestions" style="display: none;"></div>
+            <button type="button" onclick="addCargoFromSearch()">إضافة</button>
+        </div>
+        <div class="selected-cargos">
+            <ul id="selectedCargosList">
+                {% for cargo in selected_cargos %}
+                <li data-id="{{ cargo.id }}">{{ cargo.ExportedGoods }} <span class="remove-cargo" onclick="removeCargo(this)">×</span></li>
+                {% endfor %}
+            </ul>
+            <input type="hidden" name="cargo_ids" id="cargoIdsInput" value="{{ selected_cargo_ids|join:',' }}">
+        </div>
+    </div>
+    <input type="hidden" name="submitted" value="true">
+    <button type="submit">موافق</button>
+</form>
 
          <hr>
          {% if messages %}
@@ -271,74 +272,78 @@
             <h2>نتائج التقرير</h2>
             <p id="certificateCount" style="margin: 0; font-weight: bold;"></p>
          </div>
-         <div class="table-container">
-            <table id="certificatesTable">
-               <thead>
-                  <tr>
-                     <th class="hide-in-pdf">المعرف</th>
-                     <th>اسم المكتب</th>
-                     <th>رقم السجل</th>
-                     <th>رقم الشهادة</th>
-                     <th>اسم الشركة</th>
-                     <th>عنوان الشركة</th>
-                     <th class="hide-in-pdf">حالة المنشأه</th>
-                     <th class="hide-in-pdf">نوع الشركة</th>
-                     <th>اسم الفرع</th>
-                     <th>اسم الشركه المستورده</th>
-                     <th>عنوان الشركه المستورده</th>
-                     <th>تليفون الشركه المستورده</th>
-                     <th>البضائع</th>
-                     <th>بلد التصدير</th>
-                     <th>بلد المنشأ</th>
-                     <th class="date-column">تاريخ العملية</th>
-                     <th class="hide-in-pdf">رقم الايصال</th>
-                     <th class="hide-in-pdf date-column">تاريخ الايصال</th>
-                     <th class="hide-in-pdf">القيمة المدفوعة</th>
-                     <th>القيمة (الكمية)</th>
-                     <th>التكلفة</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {% for cert in certificates %}
-                  <tr class="data-row">
-                     <td class="hide-in-pdf">{{ cert.id }}</td>
-                     <td>{{ cert.Office.OfficeName|default:'' }}</td>
-                     <td>{{ cert.RegistrationNumber|default:'' }}</td>
-                     <td>{{ cert.CertificateNumber|default:'' }}</td>
-                     <td>{{ cert.Company.CompanyName|default:'' }}</td>
-                     <td>{{ cert.Company.CompanyAddress|default:'' }}</td>
-                     <td class="hide-in-pdf">{{ cert.Company.CompanyStatus|default:'' }}</td>
-                     <td class="hide-in-pdf">{{ cert.Company.CompanyType|default:'' }}</td>
-                     <td>{{ cert.BranchName|default:'' }}</td>
-                     <td>{{ cert.Company.importCompanyName|default:'' }}</td>
-                     <td>{{ cert.Company.importCompanyAddress|default:'' }}</td>
-                     <td>{{ cert.Company.importCompanyPhone|default:'' }}</td>
-                     <td>
-                        {% for shipment in cert.shipments.all %}
-                           <div class="shipment-item">
-                              {{ shipment.cargo.ExportedGoods }}{% if shipment.quantity and cert.quantity_unit %}, {{ shipment.quantity }} {{ cert.quantity_unit }}{% endif %}{% if shipment.cost_amount and cert.default_currency %}, {{ shipment.cost_amount|intcomma }} {{ cert.default_currency }}{% endif %}
-                           </div>
-                        {% empty %}
-                           غير متوفر
-                        {% endfor %}
-                     </td>
-                     <td>{{ cert.ExportCountry.CountryName|default:'' }}</td>
-                     <td>{{ cert.OriginCountry.CountryName|default:'' }}</td>
-                     <td class="date-column">{{ cert.IssueDate|default:'' }}</td>
-                     <td class="hide-in-pdf">{{ cert.ReceiptNumber|default:'' }}</td>
-                     <td class="hide-in-pdf date-column">{{ cert.ReceiptDate|default:'' }}</td>
-                     <td class="hide-in-pdf">{{ cert.PaymentAmount|floatformat:2|intcomma|default:'' }}</td>
-                     <td>{{ cert.total_quantity|floatformat:2|intcomma|default:'' }} {{ cert.quantity_unit|default:'' }}</td>
-                     <td>{{ cert.total_cost.amount|floatformat:2|intcomma|default:'' }} {{ cert.default_currency|default:'' }}</td>
-                  </tr>
-                  {% empty %}
-                  <tr class="no-data">
-                     <td colspan="21">لا توجد بيانات</td>
-                  </tr>
-                  {% endfor %}
-               </tbody>
-            </table>
-         </div>
+        <div class="table-container">
+    {% if certificates %}
+    <table id="certificatesTable">
+        <thead>
+            <tr>
+                <th class="hide-in-pdf">المعرف</th>
+                <th>اسم المكتب</th>
+                <th>رقم السجل</th>
+                <th>رقم الشهادة</th>
+                <th>اسم الشركة</th>
+                <th>عنوان الشركة</th>
+                <th class="hide-in-pdf">حالة المنشأه</th>
+                <th class="hide-in-pdf">نوع الشركة</th>
+                <th>اسم الفرع</th>
+                <th>اسم الشركه المستورده</th>
+                <th>عنوان الشركه المستورده</th>
+                <th>تليفون الشركه المستورده</th>
+                <th>البضائع</th>
+                <th>بلد التصدير</th>
+                <th>بلد المنشأ</th>
+                <th class="date-column">تاريخ العملية</th>
+                <th class="hide-in-pdf">رقم الايصال</th>
+                <th class="hide-in-pdf date-column">تاريخ الايصال</th>
+                <th class="hide-in-pdf">القيمة المدفوعة</th>
+                <th>القيمة (الكمية)</th>
+                <th>التكلفة</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cert in certificates %}
+            <tr class="data-row">
+                <td class="hide-in-pdf">{{ cert.id }}</td>
+                <td>{{ cert.Office.OfficeName|default:'' }}</td>
+                <td>{{ cert.RegistrationNumber|default:'' }}</td>
+                <td>{{ cert.CertificateNumber|default:'' }}</td>
+                <td>{{ cert.Company.CompanyName|default:'' }}</td>
+                <td>{{ cert.Company.CompanyAddress|default:'' }}</td>
+                <td class="hide-in-pdf">{{ cert.Company.CompanyStatus|default:'' }}</td>
+                <td class="hide-in-pdf">{{ cert.Company.CompanyType|default:'' }}</td>
+                <td>{{ cert.BranchName|default:'' }}</td>
+                <td>{{ cert.Company.importCompanyName|default:'' }}</td>
+                <td>{{ cert.Company.importCompanyAddress|default:'' }}</td>
+                <td>{{ cert.Company.importCompanyPhone|default:'' }}</td>
+                <td>
+                    {% for shipment in cert.shipments.all %}
+                    <div class="shipment-item">
+                        {{ shipment.cargo.ExportedGoods }}{% if shipment.quantity and cert.quantity_unit %}, {{ shipment.quantity }} {{ cert.quantity_unit }}{% endif %}{% if shipment.cost_amount and cert.default_currency %}, {{ shipment.cost_amount|intcomma }} {{ cert.default_currency }}{% endif %}
+                    </div>
+                    {% empty %}
+                    غير متوفر
+                    {% endfor %}
+                </td>
+                <td>{{ cert.ExportCountry.CountryName|default:'' }}</td>
+                <td>{{ cert.OriginCountry.CountryName|default:'' }}</td>
+                <td class="date-column">{{ cert.IssueDate|default:'' }}</td>
+                <td class="hide-in-pdf">{{ cert.ReceiptNumber|default:'' }}</td>
+                <td class="hide-in-pdf date-column">{{ cert.ReceiptDate|default:'' }}</td>
+                <td class="hide-in-pdf">{{ cert.PaymentAmount|floatformat:2|intcomma|default:'' }}</td>
+                <td>{{ cert.total_quantity|floatformat:2|intcomma|default:'' }} {{ cert.quantity_unit|default:'' }}</td>
+                <td>{{ cert.total_cost.amount|floatformat:2|intcomma|default:'' }} {{ cert.default_currency|default:'' }}</td>
+            </tr>
+            {% empty %}
+            <tr class="no-data">
+                <td colspan="21">لا توجد بيانات</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>اضغط على "موافق" لعرض البيانات</p>
+    {% endif %}
+</div>
          <!-- Totals table rendered outside the main table -->
          <div id="totalsContainer">
             <table class="totals-table">
@@ -398,6 +403,7 @@ Unauthorized access, misuse, or any illegal activities related to this system ar
             "searching": true,
             "ordering": true,
             "info": true,
+            "lengthMenu": [200, 400,600,800,1000],
             "language": {
                "search": "بحث:",
                "lengthMenu": "عرض _MENU_ سجلات لكل صفحة",

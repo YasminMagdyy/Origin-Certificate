@@ -1122,3 +1122,48 @@ html[dir="rtl"] .required-asterisk {
 .fa-spinner.fa-spin {
   margin-left: 8px;
 }
+
+/* Style for Select2 dropdowns in shipment groups */
+.shipment-group .select2-container {
+  width: 100% !important;
+  min-width: 100px;
+}
+
+.shipment-group .select2-selection {
+  height: 38px;
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.shipment-group .select2-selection__arrow {
+  height: 36px;
+}
+.selection{
+width: 100%;
+}
+
+/* More specific selector for the container */
+.form-group .select2-container {
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  position: relative;
+  vertical-align: middle;
+  width: 100%;
+}
+
+/* More specific selector for the selection */
+.form-group .select2-container--default .select2-selection--single {
+  width: 100% !important;
+  height: auto !important;
+  padding: 8px !important;
+  border: 2px solid #ced4da !important;
+  border-radius: 6px !important;
+  font-size: 10px !important;
+  text-align: right !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  background: #fff !important;
+}
+

@@ -37,9 +37,6 @@ class Company(models.Model):
     CompanyAddress = models.CharField(max_length=200)
     CompanyType = models.CharField(max_length=50)
     CompanyStatus = models.CharField(max_length=50)
-    importCompanyName = models.CharField(max_length=100, blank=True, null=True)
-    importCompanyAddress = models.CharField(max_length=200, blank=True, null=True)
-    importCompanyPhone = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.CompanyName
@@ -61,6 +58,9 @@ class Certificate(models.Model):
     Branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=False)
     BranchName = models.CharField(max_length=255)
     Company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    importCompanyName = models.CharField(max_length=100, blank=True, null=True)
+    importCompanyAddress = models.CharField(max_length=200, blank=True, null=True)
+    importCompanyPhone = models.CharField(max_length=50, blank=True, null=True)
     RegistrationNumber = models.CharField(max_length=50, blank=True, null=True)
     CertificateNumber = models.CharField(max_length=50, blank=True, null=True)
     ExportCountry = models.ForeignKey(
@@ -95,9 +95,8 @@ class Certificate(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['Branch', 'Office', 'RegistrationNumber', 'CertificateNumber'],
-                name='unique_branch_office_reg_cert',
-                condition=~models.Q(RegistrationNumber='غير موجود')
+                fields=['Branch', 'CertificateNumber'],
+                name='unique_branch_certificate',
             )
         ]
 

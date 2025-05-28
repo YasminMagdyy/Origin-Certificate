@@ -224,27 +224,27 @@ def get_company_data(request):
             Office__OfficeName=office,
             RegistrationNumber=registration_number
         )
-        
+
         certificate = query.first()
         if not certificate:
             return JsonResponse({'error': 'Company not found'}, status=404)
-            
-        # Additional check - if there are multiple certificates with same criteria
+
         if query.count() > 1:
             return JsonResponse({
                 'error': 'يوجد أكثر من شهادة بنفس بيانات الفرع والمكتب ورقم السجل. يرجى التواصل مع المسؤول.'
             }, status=400)
-            
+
         company = certificate.Company
         data = {
             'companyName': company.CompanyName,
             'companyAddress': company.CompanyAddress,
-            'companyStatus': company.CompanyStatus,
             'companyType': company.CompanyType,
+            # ✅ companyStatus is now excluded from the response
         }
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 @require_POST
@@ -269,7 +269,8 @@ def save_certificate(request):
                 return JsonResponse({'status': 'error', 'message': f'Missing or invalid {field}'}, status=400)
 
         # Validate dropdown fields
-        if data['companyStatus'] not in ['مقيد', 'غير مقيد']:
+        company_status = data.get('companyStatus')
+        if company_status not in ['مقيد', 'غير مقيد']:
             return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
         if data['companyType'] not in ['شركه', 'فردي']:
             return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
@@ -287,24 +288,19 @@ def save_certificate(request):
             branch = get_user_branch(request)
         office_name = normalize_text(data.get('office', ''))
         branch_name = branch.name if branch else normalize_text(data.get('branchName', ''))
-        company_status = normalize_text(data.get('companyStatus'))
         registration_number = "غير موجود" if company_status == 'غير مقيد' else normalize_text(data.get('registrationNumber', ''))
         certificate_number = normalize_text(data['certificateNumber'])
 
-        # Check for existing certificate with same branch, office, registration and certificate number
-        if company_status == 'مقيد' and registration_number and registration_number != "غير موجود":
-            existing_cert = Certificate.objects.filter(
-                Branch=branch,
-                Office__OfficeName=office_name,
-                RegistrationNumber=registration_number,
-                CertificateNumber=certificate_number
-            ).first()
-            
-            if existing_cert:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع والمكتب ورقم السجل ورقم الشهادة. يرجى التحقق من البيانات.'
-                }, status=400)
+        # Check for existing certificate with same branch and certificate number
+        existing_cert = Certificate.objects.filter(
+            Branch=branch,
+            CertificateNumber=certificate_number
+        ).first()
+        if existing_cert:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع ورقم الشهادة. يرجى التحقق من البيانات.'
+            }, status=400)
 
         # Handle office
         if company_status == 'مقيد' and office_name:
@@ -312,17 +308,19 @@ def save_certificate(request):
         else:
             office, _ = Office.objects.get_or_create(OfficeName="غير موجود")
 
-        # Handle company
-        company, _ = Company.objects.get_or_create(
-            CompanyName=normalize_text(data['companyName']),
-            defaults={
-                'CompanyAddress': normalize_text(data['companyAddress']),
-                'CompanyType': normalize_text(data['companyType']),
-                'CompanyStatus': company_status,
-                'importCompanyName': normalize_text(data.get('importCompanyName', '')) or None,
-                'importCompanyAddress': normalize_text(data.get('importCompanyAddress', '')) or None,
-                'importCompanyPhone': normalize_text(data.get('importCompanyPhone', '')) or None,
-            }
+        # Handle company - MODIFIED SECTION
+        logger.info(f"Saving company with CompanyStatus: {company_status}")
+        normalized_name = normalize_text(data['companyName'])
+        
+        # Always create a new company when status changes
+        company = Company.objects.create(
+            CompanyName=normalized_name,
+            CompanyAddress=normalize_text(data['companyAddress']),
+            CompanyType=normalize_text(data['companyType']),
+            CompanyStatus=company_status,
+            importCompanyName=normalize_text(data.get('importCompanyName', '')) or None,
+            importCompanyAddress=normalize_text(data.get('importCompanyAddress', '')) or None,
+            importCompanyPhone=normalize_text(data.get('importCompanyPhone', '')) or None,
         )
 
         # Handle countries
@@ -332,7 +330,6 @@ def save_certificate(request):
         origin_country, _ = Country.objects.get_or_create(
             CountryName=normalize_text(data['originCountry'])
         )
-
         # Create certificate
         certificate = Certificate.objects.create(
             Office=office,
@@ -348,8 +345,12 @@ def save_certificate(request):
             ReceiptDate=data['receiptDate'],
             PaymentAmount=data['paymentAmount'],
             quantity_unit=data['quantity_unit'],
-            default_currency=data['cost_currency']
+            default_currency=data['cost_currency'],
+            importCompanyName=normalize_text(data.get('importCompanyName', '')) or None,
+            importCompanyAddress=normalize_text(data.get('importCompanyAddress', '')) or None,
+            importCompanyPhone=normalize_text(data.get('importCompanyPhone', '')) or None,
         )
+
 
         # Process shipments
         shipments_data = data.get('shipments', [])
@@ -413,121 +414,94 @@ def update_certificate(request, certificate_id):
         data = json.loads(request.body)
         logger.info(f"Updating certificate {certificate_id} with data: {data}")
 
-        # Validate required fields
         required_fields = ['certificateNumber', 'companyName', 'companyStatus', 'companyType']
         for field in required_fields:
             if field not in data or not data[field]:
-                return JsonResponse(
-                    {'status': 'error', 'message': f'Missing or invalid {field}'},
-                    status=400
-                )
+                return JsonResponse({'status': 'error', 'message': f'Missing or invalid {field}'}, status=400)
 
-        # Validate dropdown fields
-        if data['companyStatus'] not in ['مقيد', 'غير مقيد']:
-            return JsonResponse(
-                {'status': 'error', 'message': 'Invalid companyStatus value'},
-                status=400
-            )
+        company_status = data.get('companyStatus')
+        if company_status not in ['مقيد', 'غير مقيد']:
+            return JsonResponse({'status': 'error', 'message': 'Invalid companyStatus value'}, status=400)
         if data['companyType'] not in ['شركه', 'فردي']:
-            return JsonResponse(
-                {'status': 'error', 'message': 'Invalid companyType value'},
-                status=400
-            )
+            return JsonResponse({'status': 'error', 'message': 'Invalid companyType value'}, status=400)
 
-        # Get certificate with branch check
-        branch = get_user_branch(request)
         certificate = Certificate.objects.get(id=certificate_id)
-        
-        if branch and certificate.Branch != branch:
-            return JsonResponse(
-                {'status': 'error', 'message': 'Permission denied'},
-                status=403
-            )
 
-        # Handle RegistrationNumber based on companyStatus
-        company_status = normalize_text(data['companyStatus'])
+        if request.user.is_superuser:
+            branch_name = normalize_text(data.get('branchName', ''))
+            if not branch_name:
+                return JsonResponse({'status': 'error', 'message': 'Superusers must select a branch'}, status=400)
+            branch, _ = Branch.objects.get_or_create(name=branch_name)
+            certificate.Branch = branch
+            certificate.BranchName = branch_name
+        else:
+            branch = get_user_branch(request)
+            if branch and certificate.Branch != branch:
+                return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+            certificate.BranchName = branch.name if branch else normalize_text(data.get('branchName', certificate.BranchName))
+
+        # Registration number
         if company_status == 'غير مقيد':
             registration_number = "غير موجود"
         else:
             registration_number = normalize_text(data.get('registrationNumber', ''))
             if not registration_number:
-                return JsonResponse(
-                    {'status': 'error', 'message': 'RegistrationNumber is required for مقيد status'},
-                    status=400
-                )
+                return JsonResponse({'status': 'error', 'message': 'RegistrationNumber is required for مقيد status'}, status=400)
 
         certificate_number = normalize_text(data['certificateNumber'])
 
-        # Check for duplicates when updating
-        if company_status == 'مقيد' and registration_number and registration_number != "غير موجود":
-            existing_cert = Certificate.objects.filter(
-                Branch=branch,
-                Office__OfficeName=normalize_text(data.get('office', '')),
-                RegistrationNumber=registration_number,
-                CertificateNumber=certificate_number
-            ).exclude(id=certificate_id).first()
-            
-            if existing_cert:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع والمكتب ورقم السجل ورقم الشهادة. يرجى التحقق من البيانات.'
-                }, status=400)
+        existing_cert = Certificate.objects.filter(
+            Branch=branch,
+            CertificateNumber=certificate_number
+        ).exclude(id=certificate_id).first()
+        if existing_cert:
+            return JsonResponse({'status': 'error', 'message': 'يوجد بالفعل شهادة بنفس بيانات الفرع ورقم الشهادة. يرجى التحقق من البيانات.'}, status=400)
 
-        # Update certificate fields
         certificate.CertificateNumber = certificate_number
         certificate.quantity_unit = data.get('quantity_unit', certificate.quantity_unit)
         certificate.default_currency = data.get('cost_currency', certificate.default_currency)
         certificate.RegistrationNumber = registration_number
 
-        # Handle office
+        # Office
         if company_status == 'غير مقيد':
             office, _ = Office.objects.get_or_create(OfficeName="غير موجود")
         else:
             office_name = normalize_text(data.get('office', ''))
             if not office_name:
-                return JsonResponse(
-                    {'status': 'error', 'message': 'Office name is required for مقيد status'},
-                    status=400
-                )
+                return JsonResponse({'status': 'error', 'message': 'Office name is required for مقيد status'}, status=400)
             office, _ = Office.objects.get_or_create(OfficeName=office_name)
         certificate.Office = office
 
-        # Handle company
-        company, created = Company.objects.get_or_create(
-            CompanyName=normalize_text(data['companyName']),
-            defaults={
-                'CompanyAddress': normalize_text(data.get('companyAddress', '')),
-                'CompanyType': normalize_text(data['companyType']),
-                'CompanyStatus': company_status,
-                'importCompanyName': normalize_text(data.get('importCompanyName', '')) or None,
-                'importCompanyAddress': normalize_text(data.get('importCompanyAddress', '')) or None,
-                'importCompanyPhone': normalize_text(data.get('importCompanyPhone', '')) or None,
-            }
+        # Handle company - MODIFIED SECTION
+        logger.info(f"Updating company with CompanyStatus: {company_status}")
+        company_name = normalize_text(data['companyName'])
+        
+        # Always create a new company when status changes
+        company = Company.objects.create(
+            CompanyName=company_name,
+            CompanyAddress=normalize_text(data.get('companyAddress', '')),
+            CompanyType=normalize_text(data['companyType']),
+            CompanyStatus=company_status
         )
-        if not created:
-            company.CompanyAddress = normalize_text(data.get('companyAddress', ''))
-            company.CompanyType = normalize_text(data['companyType'])
-            company.CompanyStatus = company_status
-            company.importCompanyName = normalize_text(data.get('importCompanyName', '')) or None
-            company.importCompanyAddress = normalize_text(data.get('importCompanyAddress', '')) or None
-            company.importCompanyPhone = normalize_text(data.get('importCompanyPhone', '')) or None
-            company.save()
         certificate.Company = company
 
-        # Handle countries
+        # Set import company fields directly on certificate
+        certificate.importCompanyName = normalize_text(data.get('importCompanyName', '')) or None
+        certificate.importCompanyAddress = normalize_text(data.get('importCompanyAddress', '')) or None
+        certificate.importCompanyPhone = normalize_text(data.get('importCompanyPhone', '')) or None
+
+        # Countries
         export_country_name = normalize_text(data.get('exportCountry', ''))
-        origin_country_name = normalize_text(data.get('originCountry', ''))
+        origin_country_name = normalize_text(data.get('originCountry'))
         if not export_country_name or not origin_country_name:
-            return JsonResponse(
-                {'status': 'error', 'message': 'ExportCountry and OriginCountry are required'},
-                status=400
-            )
+            return JsonResponse({'status': 'error', 'message': 'ExportCountry and OriginCountry are required'}, status=400)
+
         export_country, _ = Country.objects.get_or_create(CountryName=export_country_name)
         origin_country, _ = Country.objects.get_or_create(CountryName=origin_country_name)
         certificate.ExportCountry = export_country
         certificate.OriginCountry = origin_country
 
-        # Update other fields
+        # Other fields
         if data.get('processDate'):
             certificate.IssueDate = data['processDate']
         if data.get('receiptNumber'):
@@ -535,28 +509,27 @@ def update_certificate(request, certificate_id):
         if data.get('receiptDate'):
             certificate.ReceiptDate = data['receiptDate']
         if data.get('paymentAmount'):
-            certificate.PaymentAmount = data['paymentAmount']
-
-        certificate.save()
+            try:
+                certificate.PaymentAmount = Decimal(str(data['paymentAmount']))
+            except (InvalidOperation, TypeError, ValueError):
+                return JsonResponse({'status': 'error', 'message': 'Invalid paymentAmount value'}, status=400)
 
         # Update shipments
         certificate.shipments.all().delete()
         shipments_data = data.get('shipments', [])
+        if not shipments_data:
+            return JsonResponse({'status': 'error', 'message': 'At least one valid shipment is required'}, status=400)
+
         for shipment in shipments_data:
             cargo_name = normalize_text(shipment.get('cargo'))
             if not cargo_name:
                 continue
-                
             cargo, _ = Cargo.objects.get_or_create(ExportedGoods=cargo_name)
             try:
                 quantity = Decimal(str(shipment.get('quantity', '0')))
                 cost_amount = Decimal(str(shipment.get('cost_amount', '0')))
             except (InvalidOperation, TypeError, ValueError):
-                return JsonResponse(
-                    {'status': 'error', 'message': 'Invalid shipment values'},
-                    status=400
-                )
-                
+                return JsonResponse({'status': 'error', 'message': 'Invalid shipment values'}, status=400)
             Shipment.objects.create(
                 certificate=certificate,
                 cargo=cargo,
@@ -564,27 +537,20 @@ def update_certificate(request, certificate_id):
                 cost_amount=cost_amount
             )
 
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Certificate updated successfully'
-        })
+        certificate.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Certificate updated successfully'})
 
     except Certificate.DoesNotExist:
-        return JsonResponse(
-            {'status': 'error', 'message': 'Certificate not found'},
-            status=404
-        )
+        return JsonResponse({'status': 'error', 'message': 'Certificate not found'}, status=404)
     except Exception as e:
         logger.error(f"Error updating certificate: {str(e)}")
-        return JsonResponse(
-            {'status': 'error', 'message': str(e)},
-            status=500
-        )
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 @login_required
 @branch_permission_required
 def filter_certificates(request):
-    """Filter certificates (restricted to user's branch)"""
     office = request.GET.get('office', '').strip()
     registration_number = request.GET.get('registrationNumber', '').strip()
     branch = get_user_branch(request)
@@ -593,11 +559,9 @@ def filter_certificates(request):
         'Office', 'Company', 'OriginCountry', 'ExportCountry'
     ).prefetch_related('shipments', 'shipments__cargo')
 
-    # For superusers, show all certificates unless filtered by branch
     if branch:
         certificates = certificates.filter(Branch=branch)
     elif not request.user.is_superuser:
-        # Non-superusers without a branch shouldn't see anything
         certificates = certificates.none()
 
     if office:
@@ -626,9 +590,9 @@ def filter_certificates(request):
             'company_address': cert.Company.CompanyAddress if cert.Company else '',
             'company_status': cert.Company.CompanyStatus if cert.Company else '',
             'company_type': cert.Company.CompanyType if cert.Company else '',
-            'import_company_name': cert.Company.importCompanyName if cert.Company else '',
-            'import_company_address': cert.Company.importCompanyAddress if cert.Company else '',
-            'import_company_phone': cert.Company.importCompanyPhone if cert.Company else '',
+            'import_company_name': cert.importCompanyName or '',
+            'import_company_address': cert.importCompanyAddress or '',
+            'import_company_phone': cert.importCompanyPhone or '',
             'origin_country': cert.OriginCountry.CountryName if cert.OriginCountry else '',
             'export_country': cert.ExportCountry.CountryName if cert.ExportCountry else '',
             'issue_date': cert.IssueDate.strftime('%Y-%m-%d') if cert.IssueDate else '',
@@ -685,42 +649,48 @@ def report_view(request):
     cargo_ids_str = request.GET.get('cargo_ids', '')
     branch = get_user_branch(request)
     branch_name = branch.name if branch else request.GET.get('branch_name', '')
+    submitted = request.GET.get('submitted', '')  # تحقق من زر الموافقة
     selected_cargo_ids = cargo_ids_str.split(',') if cargo_ids_str else []
 
-    certificates = Certificate.objects.select_related(
-        'Office', 'Company', 'ExportCountry', 'OriginCountry'
-    ).prefetch_related('shipments__cargo')
+    certificates = []
+    currency_totals = []
+    selected_cargos = []
 
-    # Branch filtering
-    if branch:
-        certificates = certificates.filter(Branch=branch)
-    elif branch_name and request.user.is_superuser:
-        certificates = certificates.filter(Branch__name__icontains=branch_name)
-    elif not request.user.is_superuser:
-        certificates = certificates.none()
+    # نفّذ الـ query بس لو المستخدم ضغط على "موافق"
+    if submitted == 'true':
+        certificates = Certificate.objects.select_related(
+            'Office', 'Company', 'ExportCountry', 'OriginCountry'
+        ).prefetch_related('shipments__cargo')
 
-    if process_date_from:
-        certificates = certificates.filter(IssueDate__gte=process_date_from)
-    if process_date_to:
-        certificates = certificates.filter(IssueDate__lte=process_date_to)
-    if export_country_name:
-        certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
-    if selected_cargo_ids and selected_cargo_ids != ['']:
-        certificates = certificates.filter(shipments__cargo__id__in=selected_cargo_ids).distinct()
+        # Branch filtering
+        if branch:
+            certificates = certificates.filter(Branch=branch)
+        elif branch_name and request.user.is_superuser:
+            certificates = certificates.filter(Branch__name__icontains=branch_name)
+        elif not request.user.is_superuser:
+            certificates = certificates.none()
 
-    certificates = certificates.annotate(
-        agg_total_cost=Sum('shipments__cost_amount', default=0),
-        agg_total_quantity=Sum('shipments__quantity', default=0)
-    )
+        if process_date_from:
+            certificates = certificates.filter(IssueDate__gte=process_date_from)
+        if process_date_to:
+            certificates = certificates.filter(IssueDate__lte=process_date_to)
+        if export_country_name:
+            certificates = certificates.filter(ExportCountry__CountryName=export_country_name)
+        if selected_cargo_ids and selected_cargo_ids != ['']:
+            certificates = certificates.filter(shipments__cargo__id__in=selected_cargo_ids).distinct()
 
-    cargos = Cargo.objects.filter(shipment__certificate__in=certificates).distinct()
-    selected_cargos = Cargo.objects.filter(id__in=selected_cargo_ids) if selected_cargo_ids and selected_cargo_ids != [''] else []
-    currency_totals = (
-        Shipment.objects.filter(certificate__in=certificates)
-        .values('certificate__default_currency')
-        .annotate(total_cost=Sum('cost_amount'))
-        .order_by('certificate__default_currency')
-    )
+        certificates = certificates.annotate(
+            agg_total_cost=Sum('shipments__cost_amount', default=0),
+            agg_total_quantity=Sum('shipments__quantity', default=0)
+        )
+
+        selected_cargos = Cargo.objects.filter(id__in=selected_cargo_ids) if selected_cargo_ids and selected_cargo_ids != [''] else []
+        currency_totals = (
+            Shipment.objects.filter(certificate__in=certificates)
+            .values('certificate__default_currency')
+            .annotate(total_cost=Sum('cost_amount'))
+            .order_by('certificate__default_currency')
+        )
 
     context = {
         'certificates': certificates,
