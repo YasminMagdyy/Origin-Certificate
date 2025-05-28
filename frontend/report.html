@@ -312,9 +312,9 @@
                 <td class="hide-in-pdf">{{ cert.Company.CompanyStatus|default:'' }}</td>
                 <td class="hide-in-pdf">{{ cert.Company.CompanyType|default:'' }}</td>
                 <td>{{ cert.BranchName|default:'' }}</td>
-                <td>{{ cert.Company.importCompanyName|default:'' }}</td>
-                <td>{{ cert.Company.importCompanyAddress|default:'' }}</td>
-                <td>{{ cert.Company.importCompanyPhone|default:'' }}</td>
+                <td>{{ cert.importCompanyName|default:'' }}</td>
+                <td>{{ cert.importCompanyAddress|default:'' }}</td>
+                <td>{{ cert.importCompanyPhone|default:'' }}</td>
                 <td>
                     {% for shipment in cert.shipments.all %}
                     <div class="shipment-item">

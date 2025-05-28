@@ -239,7 +239,7 @@ def get_company_data(request):
             'companyName': company.CompanyName,
             'companyAddress': company.CompanyAddress,
             'companyType': company.CompanyType,
-            # ✅ companyStatus is now excluded from the response
+            'companyStatus': company.CompanyStatus
         }
         return JsonResponse(data)
     except Exception as e:
@@ -308,19 +308,14 @@ def save_certificate(request):
         else:
             office, _ = Office.objects.get_or_create(OfficeName="غير موجود")
 
-        # Handle company - MODIFIED SECTION
-        logger.info(f"Saving company with CompanyStatus: {company_status}")
+        # Always create a new Company instance to avoid status conflicts across certificates
+        logger.info(f"Creating new company with CompanyStatus: {company_status}")
         normalized_name = normalize_text(data['companyName'])
-        
-        # Always create a new company when status changes
         company = Company.objects.create(
             CompanyName=normalized_name,
-            CompanyAddress=normalize_text(data['companyAddress']),
+            CompanyAddress=normalize_text(data.get('companyAddress', '')),
             CompanyType=normalize_text(data['companyType']),
-            CompanyStatus=company_status,
-            importCompanyName=normalize_text(data.get('importCompanyName', '')) or None,
-            importCompanyAddress=normalize_text(data.get('importCompanyAddress', '')) or None,
-            importCompanyPhone=normalize_text(data.get('importCompanyPhone', '')) or None,
+            CompanyStatus=company_status
         )
 
         # Handle countries
@@ -330,6 +325,7 @@ def save_certificate(request):
         origin_country, _ = Country.objects.get_or_create(
             CountryName=normalize_text(data['originCountry'])
         )
+
         # Create certificate
         certificate = Certificate.objects.create(
             Office=office,
@@ -350,7 +346,6 @@ def save_certificate(request):
             importCompanyAddress=normalize_text(data.get('importCompanyAddress', '')) or None,
             importCompanyPhone=normalize_text(data.get('importCompanyPhone', '')) or None,
         )
-
 
         # Process shipments
         shipments_data = data.get('shipments', [])
@@ -409,7 +404,6 @@ def save_certificate(request):
 @login_required
 @branch_permission_required
 def update_certificate(request, certificate_id):
-    """Update certificate (restricted to user's branch)"""
     try:
         data = json.loads(request.body)
         logger.info(f"Updating certificate {certificate_id} with data: {data}")
@@ -472,11 +466,9 @@ def update_certificate(request, certificate_id):
             office, _ = Office.objects.get_or_create(OfficeName=office_name)
         certificate.Office = office
 
-        # Handle company - MODIFIED SECTION
-        logger.info(f"Updating company with CompanyStatus: {company_status}")
+        # Always create a new Company instance to avoid status conflicts across certificates
+        logger.info(f"Creating new company with CompanyStatus: {company_status}")
         company_name = normalize_text(data['companyName'])
-        
-        # Always create a new company when status changes
         company = Company.objects.create(
             CompanyName=company_name,
             CompanyAddress=normalize_text(data.get('companyAddress', '')),
@@ -789,9 +781,9 @@ def download_report(request, file_format):
                 "company_status": cert.Company.CompanyStatus if cert.Company else "",
                 "company_type": cert.Company.CompanyType if cert.Company else "",
                 "branch": cert.BranchName or "",
-                "import_company": cert.Company.importCompanyName if cert.Company else "",
-                "import_address": cert.Company.importCompanyAddress if cert.Company else "",
-                "import_phone": cert.Company.importCompanyPhone if cert.Company else "",
+                "import_company": cert.importCompanyName or "",
+                "import_address": cert.importCompanyAddress or "",
+                "import_phone": cert.importCompanyPhone or "",
                 "cargo": "غير متوفر",
                 "export_country": cert.ExportCountry.CountryName if cert.ExportCountry else "",
                 "origin_country": cert.OriginCountry.CountryName if cert.OriginCountry else "",
@@ -817,9 +809,9 @@ def download_report(request, file_format):
                     "company_status": cert.Company.CompanyStatus if cert.Company else "",
                     "company_type": cert.Company.CompanyType if cert.Company else "",
                     "branch": cert.BranchName or "",
-                    "import_company": cert.Company.importCompanyName if cert.Company else "",
-                    "import_address": cert.Company.importCompanyAddress if cert.Company else "",
-                    "import_phone": cert.Company.importCompanyPhone if cert.Company else "",
+                    "import_company": cert.importCompanyName or "",
+                    "import_address": cert.importCompanyAddress or "",
+                    "import_phone": cert.importCompanyPhone or "",
                     "cargo": f"{shipment.cargo.ExportedGoods}, {shipment.quantity} {cert.quantity_unit}, {shipment.cost_amount} {cert.default_currency}",
                     "export_country": cert.ExportCountry.CountryName if cert.ExportCountry else "",
                     "origin_country": cert.OriginCountry.CountryName if cert.OriginCountry else "",

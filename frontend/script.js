@@ -479,72 +479,82 @@ document.getElementById('saveButton').addEventListener('click', function () {
         }
         return responseData;
     })
-    .then(respData => {
-        if (respData.status === 'success') {
-            showCenteredAlert('تم الحفظ بنجاح!', 'success');
-            const certificateId = respData.certificateId;
-            const formData = {
-                id: certificateId,
-                office: office,
-                branchName: respData.branchName || branchName,
-                registrationNumber: registrationNumber,
-                certificateNumber: certificateNumber,
-                companyName: companyName,
-                companyAddress: companyAddress,
-                companyStatus: companyStatus,
-                companyType: companyType,
-                importCompanyName: importCompanyName,
-                importCompanyAddress: importCompanyAddress,
-                importCompanyPhone: importCompanyPhone,
-                exportCountry: exportCountry,
-                originCountry: originCountry,
-                issueDate: processDate,
-                receiptNumber: receiptNumber,
-                receiptDate: receiptDate,
-                paymentAmount: paymentAmount,
-                shipments: Array.isArray(respData.shipments) ? respData.shipments : shipments,
-                quantity: typeof respData.total_quantity === 'number' ? respData.total_quantity : 
-                         shipments.reduce((sum, s) => sum + s.quantity, 0),
-                cost: typeof respData.total_cost === 'number' ? respData.total_cost : 
-                      shipments.reduce((sum, s) => sum + s.cost_amount, 0),
-                quantity_unit: respData.quantity_unit || quantityUnit,
-                currency: respData.currency || costCurrency
-            };
-            createCertificateTable(formData);
+.then(respData => {
+    if (respData.status === 'success') {
+        showCenteredAlert('تم الحفظ بنجاح!', 'success');
+        const certificateId = respData.certificateId;
+        const formData = {
+            id: certificateId,
+            office: office,
+            branchName: respData.branchName || branchName,
+            registrationNumber: registrationNumber,
+            certificateNumber: certificateNumber,
+            companyName: companyName,
+            companyAddress: companyAddress,
+            companyStatus: companyStatus,
+            companyType: companyType,
+            importCompanyName: importCompanyName,
+            importCompanyAddress: importCompanyAddress,
+            importCompanyPhone: importCompanyPhone,
+            exportCountry: exportCountry,
+            originCountry: originCountry,
+            issueDate: processDate,
+            receiptNumber: receiptNumber,
+            receiptDate: receiptDate,
+            paymentAmount: paymentAmount,
+            shipments: Array.isArray(respData.shipments) ? respData.shipments : shipments,
+            quantity: typeof respData.total_quantity === 'number' ? respData.total_quantity : 
+                     shipments.reduce((sum, s) => sum + s.quantity, 0),
+            cost: typeof respData.total_cost === 'number' ? respData.total_cost : 
+                  shipments.reduce((sum, s) => sum + s.cost_amount, 0),
+            quantity_unit: respData.quantity_unit || quantityUnit,
+            currency: respData.currency || costCurrency
+        };
+        createCertificateTable(formData);
 
-            // مسح البيانات من الحقول بعد الحفظ الناجح
-            document.getElementById('office').value = '';
-            document.getElementById('registrationNumber').value = '';
-            document.getElementById('certificateNumber').value = '';
-            document.getElementById('companyName').value = '';
-            document.getElementById('companyAddress').value = '';
-            document.getElementById('companyStatus').value = 'مقيد'; // أو القيمة الافتراضية
-            document.getElementById('companyType').value = ''; // أو القيمة الافتراضية
-            document.getElementById('importCompanyName').value = '';
-            document.getElementById('importCompanyAddress').value = '';
-            document.getElementById('importCompanyPhone').value = '';
-            document.getElementById('processDate').value = '';
-            document.getElementById('receiptNumber').value = '';
-            document.getElementById('receiptDate').value = '';
-            document.getElementById('paymentAmount').value = '';
-            document.getElementById('quantity_unit').value = ''; // أو القيمة الافتراضية
-            document.getElementById('cost_currency').value = ''; // أو القيمة الافتراضية
+        // Reset form fields
+        document.getElementById('office').value = '';
+        document.getElementById('registrationNumber').value = '';
+        document.getElementById('certificateNumber').value = '';
+        document.getElementById('companyName').value = '';
+        document.getElementById('companyAddress').value = '';
+        document.getElementById('companyStatus').value = 'مقيد';
+        document.getElementById('companyType').value = '';
+        document.getElementById('importCompanyName').value = '';
+        document.getElementById('importCompanyAddress').value = '';
+        document.getElementById('importCompanyPhone').value = '';
+        document.getElementById('processDate').value = '';
+        document.getElementById('receiptNumber').value = '';
+        document.getElementById('receiptDate').value = '';
+        document.getElementById('paymentAmount').value = '';
+        document.getElementById('quantity_unit').value = '';
+        document.getElementById('cost_currency').value = '';
 
-            // مسح الشحنات
-            const shipmentContainer = document.getElementById('shipmentContainer');
-            shipmentContainer.innerHTML = ''; // يمسح كل الشحنات
-
-            // إعادة تهيئة بلد التصدير والبلد الأصلي (لو فيه دالة clearCountries)
-            if (typeof clearCountries === 'function') {
-                clearCountries();
-            }
-        } else {
-            throw {
-                type: 'VALIDATION_ERROR',
-                message: respData.message || 'حدث خطأ أثناء الحفظ'
-            };
+        // Reset branchName for superusers
+        const branchNameSelect = document.getElementById('branchName');
+        if (branchNameSelect) {
+            branchNameSelect.value = ''; // Reset branchName
         }
-    })
+
+        // Reset Select2 fields
+        $('#exportCountry').val(null).trigger('change'); // Clear exportCountry
+        $('#originCountry').val('مصر').trigger('change'); // Reset originCountry to default (Egypt)
+
+        // Clear all shipments and add one empty shipment group
+        const shipmentContainer = document.getElementById('shipmentContainer');
+        if (shipmentContainer) {
+            shipmentContainer.innerHTML = ''; // Clear existing shipments
+            handleAddShipment(); // Add one empty shipment group
+        } else {
+            console.error('shipmentContainer not found!');
+        }
+    } else {
+        throw {
+            type: 'VALIDATION_ERROR',
+            message: respData.message || 'حدث خطأ أثناء الحفظ'
+        };
+    }
+})
     .catch(error => {
         console.error('Error:', error);
         let errorMessage = 'حدث خطأ غير متوقع';
@@ -582,7 +592,8 @@ function createCertificateTable(formData) {
         'اسم المكتب', 'اسم الفرع', 'رقم السجل', 'رقم الشهادة', 'اسم الشركة', 'عنوان الشركة',
         'حالة المنشأه', 'نوع الشركة', 'اسم الشركه المستورده', 'عنوان الشركه المستورده',
         'تليفون الشركه المستورده', 'البضاعة', 'بلد التصدير', 'بلد المنشأ', 'تاريخ العملية',
-        'القيمة', 'التكلفة', 'رقم الايصال', 'تاريخ الايصال', 'القيمة المدفوعة', 'التعديل', 'الحذف'
+        'القيمة', 'التكلفة', 'رقم الايصال', 'تاريخ الايصال', 'القيمة المدفوعة', 
+        // 'التعديل', 'الحذف'
     ];
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
